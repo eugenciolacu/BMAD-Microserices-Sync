@@ -37,9 +37,9 @@ classification:
 
 ## Executive Summary
 
-Microserices-Sync is a self-contained experiment that emulates offline/online synchronization between a HoloLens-like client application and a centralized source of truth, using two dockerized microservices (ClientService and ServerService). Its purpose is to de-risk future projects by validating a realistic multi-client sync pattern in advance, using a domain-relevant schema and explicit success metrics, rather than discovering sync issues late in a real engagement. When successful, it provides a working, repeatable reference that architects and developers can run, inspect, and trust as the default approach for similar future solutions.
+Microserices-Sync is a self-contained experiment that emulates offline/online synchronization between a HoloLens-like client application and a centralized source of truth, using two dockerized microservices (ClientService and ServerService). It de-risks future projects by validating a realistic multi-client sync pattern in advance, with a domain-relevant schema and explicit success metrics, instead of discovering sync issues late in a real engagement. The output is a working, repeatable reference that architects and developers can run, inspect, and treat as the default approach for similar future solutions.
 
-The project focuses narrowly on synchronization correctness and data integrity, not on shipping a production system. Core proving scenarios include multiple ClientService instances generating measurements independently, pushing them to ServerService, and then converging so that every client and the server hold the same complete measurement set with no loss, duplication, or divergence. By packaging the entire setup in Docker, the experiment remains easy to hand over, run, and maintain, while remaining close enough in technology and schema to what a real HoloLens-plus-backend project will require.
+The project focuses narrowly on synchronization correctness and data integrity, not on shipping a production system. Core proving scenarios include multiple ClientService instances generating measurements independently, pushing them to ServerService, and then converging so that every client and the server hold the same complete measurement set with no loss, duplication, or divergence. By packaging the entire setup in Docker, the experiment stays easy to hand over, run, and maintain, while remaining close enough in technology and schema to what a real HoloLens-plus-backend project will require.
 
 ### What Makes This Special
 
@@ -79,6 +79,18 @@ The core differentiator is the "I tried it, I checked it, it works" guarantee. I
 - In all configured core scenarios (e.g., the ones defined in the brief), the number and identities of measurements on ServerService and on each ClientService match exactly after sync (0 mismatches, 0 missing, 0 duplicates).
 - The core scenarios can be run multiple times from a clean baseline with consistent, correct results on every run.
 - For at least one real project, the team is able to reuse the experiment's sync design (and ideally code) rather than designing an entirely new approach.
+
+### Success Criteria to FR/NFR Mapping
+
+The table below maps representative success criteria to the primary requirements that implement them.
+
+| Success Area           | Example Criteria                                                                                           | Primary FRs/NFRs                 |
+|------------------------|-----------------------------------------------------------------------------------------------------------|----------------------------------|
+| User Success           | Developer can run documented sync scenarios end-to-end and verify identical datasets across services.     | FR1–FR3, FR6–FR9, NFR1–NFR3      |
+| Business Success       | First real project reuses this experiment with minimal adaptation and reduced exploration time.           | FR4–FR5, FR7–FR9, FR13–FR15      |
+| Technical Success      | Core push/pull scenarios converge with no loss, duplication, or corruption across repeated runs.         | FR6–FR9, FR10–FR12, NFR1–NFR3    |
+| Reliability & Repeatability | Standard scenarios can be run many times from a clean seeded state with consistent results.               | FR4–FR5, FR9, NFR2–NFR3          |
+| Developer Experience   | New developers can bring up the environment, inspect data, and follow scenarios with minimal friction.    | FR1–FR3, FR10–FR15, NFR6–NFR7    |
 
 ## Product Scope
 
@@ -209,6 +221,8 @@ Microserices-Sync is a .NET 10 ASP MVC–based developer experiment, delivered a
 
 ## Functional Requirements
 
+Each functional requirement is traceable back to the Success Criteria and User Journeys sections above; the mapping table in Success Criteria highlights the primary links.
+
 ### Environment & Setup
 
 - FR1: Developer can clone the Microserices-Sync repository and bring up all required services using a single documented command or short sequence (e.g., docker-compose plus minimal setup).
@@ -240,6 +254,8 @@ Microserices-Sync is a .NET 10 ASP MVC–based developer experiment, delivered a
 - FR15: Developer and architect can read concise architecture notes (also in README) that explain service responsibilities, data flows, and how the sync logic is structured so they can reason about reusing the pattern.
 
 ## Non-Functional Requirements
+
+These non-functional requirements support the measurable outcomes defined in Success Criteria (especially performance, reliability, and environment expectations) and ensure the experiment remains repeatable and trustworthy over time.
 
 ### Performance
 
