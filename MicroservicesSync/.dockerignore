@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/.git
+**/.vs
+**/.vscode
+**/.idea
+**/node_modules/
+**/*.user
+**/*.suo
+**/Thumbs.db
+**/.DS_Store
+**/docker-compose.override.yml
+**/_bmad/
+**/_bmad-output/
+**/docs/
+**/*.md
+!README.md

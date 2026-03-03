@@ -1,0 +1,17 @@
+# docker-compose.override.yml
+# Local VS debugging overrides - not used in standard docker-compose up
+# Use this for Visual Studio container debugging scenarios
+
+services:
+  serverservice:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"
+
+  clientservice_user1:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - SERVER_BASE_URL=http://server:8080
+    ports:
+      - "5001:8080"

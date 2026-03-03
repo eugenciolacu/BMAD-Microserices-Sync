@@ -1,0 +1,191 @@
+# docker-compose.yml — Microserices-Sync full experiment environment
+# Usage: docker-compose up --build   (first run / after code changes)
+#        docker-compose up            (subsequent runs)
+#        docker-compose down           (stop & remove containers, keep volumes)
+# Requires: .env file at this directory with SA_PASSWORD=<value>
+
+services:
+  # ── SQL Server (ServerService database) ────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: serverservice-sqlserver
+    env_file:
+      - .env
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - serverservice_sqlserver_data:/var/opt/mssql
+    networks:
+      - microservices-sync-network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD}" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── ServerService ──────────────────────────────────────────────────────────
+  serverservice:
+    image: serverservice:latest
+    container_name: serverservice-app
+    build:
+      context: .
+      dockerfile: ServerService/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ServerServiceDb;User=sa;Password=${SA_PASSWORD:-YourStrong@Passw0rd};TrustServerCertificate=True
+    volumes:
+      - serverservice_logs:/app/logs
+    networks:
+      - microservices-sync-network
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── ClientService instances (5 users) ──────────────────────────────────────
+  clientservice_user1:
+    image: clientservice:latest
+    container_name: clientservice-app-user1
+    build:
+      context: .
+      dockerfile: ClientService/Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser1.sqlite
+      - ClientIdentity__UserId=00000000-0000-0000-0000-000000000001
+      - SERVER_BASE_URL=http://serverservice:8080
+    volumes:
+      - clientservice_sqlite_data_user1:/app/SqLiteDatabase
+      - clientservice_logs_user1:/app/logs
+    networks:
+      - microservices-sync-network
+    depends_on:
+      - serverservice
+    restart: unless-stopped
+
+  clientservice_user2:
+    image: clientservice:latest
+    container_name: clientservice-app-user2
+    build:
+      context: .
+      dockerfile: ClientService/Dockerfile
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser2.sqlite
+      - ClientIdentity__UserId=00000000-0000-0000-0000-000000000002
+      - SERVER_BASE_URL=http://serverservice:8080
+    volumes:
+      - clientservice_sqlite_data_user2:/app/SqLiteDatabase
+      - clientservice_logs_user2:/app/logs
+    networks:
+      - microservices-sync-network
+    depends_on:
+      - serverservice
+    restart: unless-stopped
+
+  clientservice_user3:
+    image: clientservice:latest
+    container_name: clientservice-app-user3
+    build:
+      context: .
+      dockerfile: ClientService/Dockerfile
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser3.sqlite
+      - ClientIdentity__UserId=00000000-0000-0000-0000-000000000003
+      - SERVER_BASE_URL=http://serverservice:8080
+    volumes:
+      - clientservice_sqlite_data_user3:/app/SqLiteDatabase
+      - clientservice_logs_user3:/app/logs
+    networks:
+      - microservices-sync-network
+    depends_on:
+      - serverservice
+    restart: unless-stopped
+
+  clientservice_user4:
+    image: clientservice:latest
+    container_name: clientservice-app-user4
+    build:
+      context: .
+      dockerfile: ClientService/Dockerfile
+    ports:
+      - "5004:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser4.sqlite
+      - ClientIdentity__UserId=00000000-0000-0000-0000-000000000004
+      - SERVER_BASE_URL=http://serverservice:8080
+    volumes:
+      - clientservice_sqlite_data_user4:/app/SqLiteDatabase
+      - clientservice_logs_user4:/app/logs
+    networks:
+      - microservices-sync-network
+    depends_on:
+      - serverservice
+    restart: unless-stopped
+
+  clientservice_user5:
+    image: clientservice:latest
+    container_name: clientservice-app-user5
+    build:
+      context: .
+      dockerfile: ClientService/Dockerfile
+    ports:
+      - "5005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser5.sqlite
+      - ClientIdentity__UserId=00000000-0000-0000-0000-000000000005
+      - SERVER_BASE_URL=http://serverservice:8080
+    volumes:
+      - clientservice_sqlite_data_user5:/app/SqLiteDatabase
+      - clientservice_logs_user5:/app/logs
+    networks:
+      - microservices-sync-network
+    depends_on:
+      - serverservice
+    restart: unless-stopped
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+networks:
+  microservices-sync-network:
+    driver: bridge
+
+# ── Volumes ────────────────────────────────────────────────────────────────────
+volumes:
+  serverservice_sqlserver_data:
+  serverservice_logs:
+
+  clientservice_sqlite_data_user1:
+  clientservice_logs_user1:
+  
+  clientservice_sqlite_data_user2:
+  clientservice_logs_user2:
+  
+  clientservice_sqlite_data_user3:
+  clientservice_logs_user3:
+  
+  clientservice_sqlite_data_user4:
+  clientservice_logs_user4:
+  
+  clientservice_sqlite_data_user5:
+  clientservice_logs_user5:

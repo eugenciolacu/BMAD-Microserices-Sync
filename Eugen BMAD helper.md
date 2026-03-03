@@ -56,3 +56,9 @@ Sprint planning (preload scrum master agent /bmad-agent-bmm-sm in new chat) This
 
 Create story (with preloaded scrum master agent):
 /bmad-bmm-create-story
+
+Implement the story (use dev agent /bmad-agent-bmm-dev):
+/bmad-bmm-dev-story
+
+Quality validation, code review
+/bmad-bmm-code-review

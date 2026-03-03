@@ -48,7 +48,7 @@ development_status:
   # FRs covered: FR1, FR2, FR3, FR4, FR5
   # ─────────────────────────────────────────────────────────────────────────────
   epic-1: in-progress
-  1-1-single-command-environment-startup: ready-for-dev
+    1-1-single-command-environment-startup: done
   1-2-service-health-and-status-verification: backlog
   1-3-configurable-scenario-parameters: backlog
   1-4-initial-database-seeding-from-baseline-data: backlog
