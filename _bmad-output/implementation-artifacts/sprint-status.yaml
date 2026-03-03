@@ -1,0 +1,100 @@
+# generated: 2026-03-03
+# project: Microserices-Sync
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: c:/Eugen Files/Projects/BMAD-Microserices-Sync/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-03
+project: Microserices-Sync
+project_key: NOKEY
+tracking_system: file-system
+story_location: "c:/Eugen Files/Projects/BMAD-Microserices-Sync/_bmad-output/implementation-artifacts"
+
+development_status:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Epic 1: Environment, Seeding, and Reset Baseline
+  # Enable developers to clone the repo, bring up all services via a simple
+  # command, configure scenario parameters, and initialize/reset all databases
+  # to a known baseline so experiments start from a consistent state.
+  # FRs covered: FR1, FR2, FR3, FR4, FR5
+  # ─────────────────────────────────────────────────────────────────────────────
+  epic-1: backlog
+  1-1-single-command-environment-startup: backlog
+  1-2-service-health-and-status-verification: backlog
+  1-3-configurable-scenario-parameters: backlog
+  1-4-initial-database-seeding-from-baseline-data: backlog
+  1-5-reset-environment-to-clean-baseline: backlog
+  epic-1-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Epic 2: Multi-Client Sync Scenarios
+  # Enable developers to run core and edge-case multi-client sync scenarios from
+  # a clean baseline and reliably converge all ClientService instances and
+  # ServerService to the same measurement dataset across repeated runs, using
+  # batched operations inside a single transaction per push/pull.
+  # FRs covered: FR6, FR7, FR8, FR9
+  # ─────────────────────────────────────────────────────────────────────────────
+  epic-2: backlog
+  2-1-client-side-measurement-generation-per-instance: backlog
+  2-2-transactional-batched-server-side-measurement-push: backlog
+  2-3-transactional-batched-client-side-pull-of-consolidated-measurements: backlog
+  2-4-edge-case-multi-client-scenario-variant-with-batching: backlog
+  2-5-repeatable-transactional-sync-runs-from-clean-baseline: backlog
+  epic-2-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Epic 3: Sync Diagnostics and Audit
+  # Enable developers to see what happened during sync: view summaries of sync
+  # runs, inspect data on both services, and use logs and diagnostics to
+  # investigate unexpected behavior or edge cases.
+  # FRs covered: FR10, FR11, FR12
+  # ─────────────────────────────────────────────────────────────────────────────
+  epic-3: backlog
+  3-1-server-side-sync-run-summary-view: backlog
+  3-2-measurement-inspection-via-jqgrid-on-both-services: backlog
+  3-3-direct-database-inspection-support-for-diagnostics: backlog
+  3-4-application-logging-for-sync-operations: backlog
+  3-5-troubleshooting-flow-for-unexpected-sync-outcomes: backlog
+  epic-3-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Epic 4: Developer Documentation and Guidance
+  # Enable developers and architects to quickly understand how to install, run,
+  # and reason about Microserices-Sync through a single README that covers
+  # quickstart, scenarios, and architecture notes.
+  # FRs covered: FR13, FR14, FR15
+  # ─────────────────────────────────────────────────────────────────────────────
+  epic-4: backlog
+  4-1-single-entry-readme-with-prerequisites-and-quickstart: backlog
+  4-2-scenario-guide-for-core-and-edge-case-sync-runs: backlog
+  4-3-architecture-overview-notes-for-reuse: backlog
+  epic-4-retrospective: optional

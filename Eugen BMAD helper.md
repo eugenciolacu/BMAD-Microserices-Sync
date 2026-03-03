@@ -50,3 +50,6 @@ Create epics and stories (preload PM agent /bmad-agent-bmm-pm in a new chat):
 
 Check implimentation readiness (preload architecture agent /bmad-agent-bmm-architect in a new chat):
 /bmad-bmm-check-implementation-readiness
+
+Sprint planning (preload scrum master agent /bmad-agent-bmm-sm in new chat) This creates sprint-status.yaml to track all epics and stories.
+/bmad-bmm-sprint-planning
