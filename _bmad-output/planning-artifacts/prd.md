@@ -236,10 +236,10 @@ Each functional requirement is traceable back to the Success Criteria and User J
 
 ### Core Sync Scenarios
 
-- FR6: Developer can run the core sync scenario where multiple ClientService instances each generate measurements, push them to ServerService, and then pull the consolidated measurements back.
+- FR6: Developer can run the core sync scenario where multiple ClientService instances each generate measurements, push them to ServerService, and then pull the consolidated measurements back, with each push and pull operation executing inside a database transaction that either fully commits or fully rolls back on error.
 - FR7: Developer can run at least one additional, clearly documented edge-case scenario variant (for example with different client counts or measurement patterns).
 - FR8: After a scenario run completes, the system ensures that all ClientService instances and ServerService hold the same set of measurements (no missing, duplicated, or corrupted records), verifiable using the provided tools.
-- FR9: Developer can repeat the defined scenarios multiple times from a clean baseline and observe consistent, correct results.
+- FR9: Developer can repeat the defined scenarios multiple times from a clean baseline and observe consistent, correct results, even when sync operations process measurements in configurable batches (for example, 5 records per batch) to emulate larger datasets.
 
 ### Diagnostics & Audit
 
@@ -259,7 +259,7 @@ These non-functional requirements support the measurable outcomes defined in Suc
 
 ### Performance
 
-- NFR1: Core sync scenarios (including the standard 5-clients × 10-measurements case) complete within a few minutes on a typical developer laptop, without UI actions feeling blocked or unresponsive.
+- NFR1: Core sync scenarios (including the standard 5-clients × 10-measurements case) complete within a few minutes on a typical developer laptop, without UI actions feeling blocked or unresponsive, even when measurements are processed in batched push/pull operations of a configurable size.
 
 ### Reliability & Repeatability
 

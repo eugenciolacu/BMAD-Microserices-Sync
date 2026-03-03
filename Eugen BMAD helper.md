@@ -44,3 +44,9 @@ Validate a documen:
 
 Generate project-context.md (recomended after generation of architecture, optionally, my thoughts, can be re-generated at any step)
 /bmad-bmm-generate-project-context
+
+Create epics and stories (preload PM agent /bmad-agent-bmm-pm in a new chat):
+/bmad-bmm-create-epics-and-stories
+
+Check implimentation readiness (preload architecture agent /bmad-agent-bmm-architect in a new chat):
+/bmad-bmm-check-implementation-readiness

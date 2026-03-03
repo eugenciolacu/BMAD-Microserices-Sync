@@ -284,6 +284,12 @@ dotnet add ClientService/ClientService.csproj reference Sync.Application/Sync.Ap
   - SQLite: numeric/integer column configured as a concurrency token.
 - Timestamps plus concurrency tokens are used in `Sync.Application` to detect and resolve conflicts during sync.
 
+**Sync transactions and batching:**
+- Each sync push or pull operation runs inside a single explicit database transaction that spans multiple internal batches; either all batches for that operation commit together or the entire transaction is rolled back on error.
+- ServerService splits incoming measurement pushes into in-memory batches of size `SyncOptions.BatchSize` (default value 5) but applies all batches within the same transaction scope so there are no partially applied sync operations.
+- ClientService applies pulled measurements using the same batched-in-memory, single-transaction pattern, so that a failure in any batch causes the whole pull operation to roll back.
+- The sync batch size is configurable via standard configuration (for example, `appsettings.json` and environment variables) and is used to emulate very large datasets during experimentation without changing code, while still preserving all-or-nothing transactional semantics per sync operation.
+
 **Seeding, initial state, and first sync:**
 - On first `docker-compose` startup:
   - ServerService database is seeded with all tables **except Measurements** (reference data such as Buildings, Rooms, Surfaces, Cells, Users, etc. are populated; Measurements initially empty).
