@@ -55,3 +55,7 @@ nunit-*.xml
 # Environment variables (secrets)
 .env
 
+# Visual Studio local settings (never commit)
+.vs/
+*.user
+*.suo

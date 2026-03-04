@@ -62,3 +62,6 @@ Implement the story (use dev agent /bmad-agent-bmm-dev):
 
 Quality validation, code review
 /bmad-bmm-code-review
+
+Epic retrospective, after completeing stories in a epic (preload Scrum Master agent /bmad-agent-bmm-sm):
+/bmad-bmm-retrospective

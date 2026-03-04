@@ -1,7 +1,14 @@
+using ClientService.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHealthChecks()
+    .AddCheck("client-identity-config", () =>
+        ClientIdentityHealthCheck.Evaluate(builder.Configuration["ClientIdentity:UserId"]));
+// TODO Story 1.4: add .AddDbContextCheck<ClientDbContext>() here
 
 var app = builder.Build();
 
@@ -19,6 +26,17 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    // AC1/AC2: return JSON {"status":"Healthy"} or {"status":"Unhealthy"} not plain-text
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(
+            System.Text.Json.JsonSerializer.Serialize(new { status = report.Status.ToString() }));
+    }
+});
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
@@ -26,3 +44,6 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+// Required for WebApplicationFactory in integration tests
+public partial class Program { }

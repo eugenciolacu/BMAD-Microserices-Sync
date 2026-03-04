@@ -24,6 +24,7 @@ EXPOSE 8080
 
 # Create directories for SQLite DB and logs (named volumes will mount here)
 USER root
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /app/logs && chown -R $APP_UID:$APP_UID /app/logs
 RUN mkdir -p /app/SqLiteDatabase && chown -R $APP_UID:$APP_UID /app/SqLiteDatabase
 USER $APP_UID

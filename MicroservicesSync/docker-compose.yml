@@ -47,6 +47,12 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   # ── ClientService instances (5 users) ──────────────────────────────────────
@@ -70,7 +76,14 @@ services:
     networks:
       - microservices-sync-network
     depends_on:
-      - serverservice
+      serverservice:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   clientservice_user2:
@@ -93,7 +106,14 @@ services:
     networks:
       - microservices-sync-network
     depends_on:
-      - serverservice
+      serverservice:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   clientservice_user3:
@@ -116,7 +136,14 @@ services:
     networks:
       - microservices-sync-network
     depends_on:
-      - serverservice
+      serverservice:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   clientservice_user4:
@@ -139,7 +166,14 @@ services:
     networks:
       - microservices-sync-network
     depends_on:
-      - serverservice
+      serverservice:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   clientservice_user5:
@@ -162,7 +196,14 @@ services:
     networks:
       - microservices-sync-network
     depends_on:
-      - serverservice
+      serverservice:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
 # ── Networks ───────────────────────────────────────────────────────────────────
