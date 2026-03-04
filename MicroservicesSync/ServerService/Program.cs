@@ -1,9 +1,14 @@
+using Sync.Application.Options;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHealthChecks();
 // TODO Story 1.4: add .AddDbContextCheck<ServerDbContext>() here
+
+// Sync scenario options — configurable via SyncOptions__* env vars or appsettings.json
+builder.Services.Configure<SyncOptions>(builder.Configuration.GetSection(SyncOptions.SectionName));
 
 var app = builder.Build();
 

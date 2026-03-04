@@ -44,6 +44,28 @@ docker-compose ps
 A ClientService instance will report `{"status":"Unhealthy"}` (HTTP 503) if its
 `ClientIdentity__UserId` environment variable is missing or not a valid GUID.
 
+## Scenario Parameters
+
+Control experiment inputs via environment variables in `docker-compose.yml` — no recompilation needed.
+
+| Environment Variable               | Config path (ASP.NET notation)              | Default | Description                                                       |
+|------------------------------------|---------------------------------------------|---------|-------------------------------------------------------------------|
+| `SyncOptions__MeasurementsPerClient` | `SyncOptions:MeasurementsPerClient`        | `10`    | Number of measurements generated per ClientService per scenario run |
+| `SyncOptions__BatchSize`           | `SyncOptions:BatchSize`                     | `5`     | Records per in-memory batch during a push/pull sync operation     |
+
+To override for a single run, edit the matching `environment:` entry under the relevant service in `docker-compose.yml`, then run `docker-compose up`.
+
+### Changing Client Count
+
+The default topology uses 5 ClientService instances (`clientservice_user1` through `clientservice_user5`), as defined in ADR-002.
+
+To add a 6th client:
+1. Copy any `clientservice_userN` block in `docker-compose.yml`, rename it `clientservice_user6`, and update the port mapping (`"5006:8080"`), SQLite path, `ClientIdentity__UserId` (new stable GUID), and volume names.
+2. Add the matching volume declarations at the bottom of `docker-compose.yml`.
+3. Ensure the GUID matches a seeded user entry (Story 1.4 seed data).
+
+To remove a client: delete its service block and its volumes declaration.
+
 ## Running Tests
 
 ```bash

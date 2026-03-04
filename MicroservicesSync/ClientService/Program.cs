@@ -1,5 +1,6 @@
 using ClientService.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Sync.Application.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,9 @@ builder.Services.AddHealthChecks()
     .AddCheck("client-identity-config", () =>
         ClientIdentityHealthCheck.Evaluate(builder.Configuration["ClientIdentity:UserId"]));
 // TODO Story 1.4: add .AddDbContextCheck<ClientDbContext>() here
+
+// Sync scenario options — configurable via SyncOptions__* env vars or appsettings.json
+builder.Services.Configure<SyncOptions>(builder.Configuration.GetSection(SyncOptions.SectionName));
 
 var app = builder.Build();
 

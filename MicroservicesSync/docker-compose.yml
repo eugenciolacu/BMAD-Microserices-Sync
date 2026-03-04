@@ -40,6 +40,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ServerServiceDb;User=sa;Password=${SA_PASSWORD:-YourStrong@Passw0rd};TrustServerCertificate=True
+      - SyncOptions__BatchSize=5
+      - SyncOptions__MeasurementsPerClient=10
     volumes:
       - serverservice_logs:/app/logs
     networks:
@@ -56,6 +58,15 @@ services:
     restart: unless-stopped
 
   # ── ClientService instances (5 users) ──────────────────────────────────────
+  # ── To change client count: ────────────────────────────────────────────────
+  # The MVP topology is fixed to 5 ClientService instances (ADR-002).
+  # To add a 6th client:
+  #   1. Add a clientservice_user6 block below (copy any existing block, bump ports and volumes).
+  #   2. Set ClientIdentity__UserId to a new stable GUID matching a seeded user (Story 1.4).
+  #   3. Add matching volumes at the bottom of this file.
+  # To remove a client: delete the block and its volumes declaration.
+  # Always keep user GUIDs consistent with the seed CSV (Story 1.4).
+  # ──────────────────────────────────────────────────────────────────────────
   clientservice_user1:
     image: clientservice:latest
     container_name: clientservice-app-user1
@@ -70,6 +81,8 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser1.sqlite
       - ClientIdentity__UserId=00000000-0000-0000-0000-000000000001
       - SERVER_BASE_URL=http://serverservice:8080
+      - SyncOptions__BatchSize=5
+      - SyncOptions__MeasurementsPerClient=10
     volumes:
       - clientservice_sqlite_data_user1:/app/SqLiteDatabase
       - clientservice_logs_user1:/app/logs
@@ -100,6 +113,8 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser2.sqlite
       - ClientIdentity__UserId=00000000-0000-0000-0000-000000000002
       - SERVER_BASE_URL=http://serverservice:8080
+      - SyncOptions__BatchSize=5
+      - SyncOptions__MeasurementsPerClient=10
     volumes:
       - clientservice_sqlite_data_user2:/app/SqLiteDatabase
       - clientservice_logs_user2:/app/logs
@@ -130,6 +145,8 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser3.sqlite
       - ClientIdentity__UserId=00000000-0000-0000-0000-000000000003
       - SERVER_BASE_URL=http://serverservice:8080
+      - SyncOptions__BatchSize=5
+      - SyncOptions__MeasurementsPerClient=10
     volumes:
       - clientservice_sqlite_data_user3:/app/SqLiteDatabase
       - clientservice_logs_user3:/app/logs
@@ -160,6 +177,8 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser4.sqlite
       - ClientIdentity__UserId=00000000-0000-0000-0000-000000000004
       - SERVER_BASE_URL=http://serverservice:8080
+      - SyncOptions__BatchSize=5
+      - SyncOptions__MeasurementsPerClient=10
     volumes:
       - clientservice_sqlite_data_user4:/app/SqLiteDatabase
       - clientservice_logs_user4:/app/logs
@@ -190,6 +209,8 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/SqLiteDatabase/ClientServiceDbUser5.sqlite
       - ClientIdentity__UserId=00000000-0000-0000-0000-000000000005
       - SERVER_BASE_URL=http://serverservice:8080
+      - SyncOptions__BatchSize=5
+      - SyncOptions__MeasurementsPerClient=10
     volumes:
       - clientservice_sqlite_data_user5:/app/SqLiteDatabase
       - clientservice_logs_user5:/app/logs
