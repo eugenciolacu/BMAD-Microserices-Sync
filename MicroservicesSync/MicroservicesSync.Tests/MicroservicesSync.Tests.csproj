@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ClientService\ClientService.csproj" />
     <ProjectReference Include="..\Sync.Application\Sync.Application.csproj" />
+    <ProjectReference Include="..\Sync.Infrastructure\Sync.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

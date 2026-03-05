@@ -6,3 +6,40 @@
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<div class="mt-4">
+    <h2>Administration</h2>
+    <p>Reset the ServerService database to the clean baseline state (all measurements deleted, reference data re-seeded).</p>
+    <button id="btnReset" class="btn btn-danger" onclick="resetServer()">Reset to Baseline</button>
+    <div id="resetResult" class="mt-2"></div>
+</div>
+
+<script>
+    function resetServer() {
+        if (!confirm('Are you sure? This will delete all measurements and re-seed reference data.')) return;
+        document.getElementById('btnReset').disabled = true;
+        fetch('/api/v1/admin/reset', { method: 'POST' })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Request failed (' + r.status + ')');
+                return data;
+            })
+            .then(data => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-success mt-2';
+                el.textContent = data.message;
+                const box = document.getElementById('resetResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Reset failed: ' + (err.message || err);
+                const box = document.getElementById('resetResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnReset').disabled = false; });
+    }
+</script>

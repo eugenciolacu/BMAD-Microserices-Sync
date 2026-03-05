@@ -6,3 +6,80 @@
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<div class="mt-4">
+    <h2>Administration</h2>
+
+    <div class="mb-3">
+        <h4>Reset Client DB</h4>
+        <p>Clears all reference data and measurements from this ClientService's SQLite database.
+           After reset, use <strong>Pull Reference Data</strong> below (or restart the container) to repopulate reference data.</p>
+        <button id="btnReset" class="btn btn-danger" onclick="resetClient()">Reset Client DB</button>
+        <div id="resetResult" class="mt-2"></div>
+    </div>
+
+    <div class="mb-3">
+        <h4>Pull Reference Data</h4>
+        <p>Manually pulls reference data from ServerService into this ClientService's local database.
+           Only works when the local DB is empty (run <strong>Reset Client DB</strong> first if needed).</p>
+        <button id="btnPull" class="btn btn-primary" onclick="pullReferenceData()">Pull Reference Data</button>
+        <div id="pullResult" class="mt-2"></div>
+    </div>
+</div>
+
+<script>
+    function resetClient() {
+        if (!confirm('Are you sure? This will delete all measurements and all reference data.\nYou will need to pull reference data again or restart the container.')) return;
+        document.getElementById('btnReset').disabled = true;
+        fetch('/api/v1/admin/reset', { method: 'POST' })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Request failed (' + r.status + ')');
+                return data;
+            })
+            .then(data => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-success mt-2';
+                el.textContent = data.message;
+                const box = document.getElementById('resetResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Reset failed: ' + (err.message || err);
+                const box = document.getElementById('resetResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnReset').disabled = false; });
+    }
+
+    function pullReferenceData() {
+        document.getElementById('btnPull').disabled = true;
+        fetch('/api/v1/admin/pull-reference-data', { method: 'POST' })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Request failed (' + r.status + ')');
+                return data;
+            })
+            .then(data => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-success mt-2';
+                el.textContent = data.message;
+                const box = document.getElementById('pullResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Pull failed: ' + (err.message || err);
+                const box = document.getElementById('pullResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnPull').disabled = false; });
+    }
+</script>

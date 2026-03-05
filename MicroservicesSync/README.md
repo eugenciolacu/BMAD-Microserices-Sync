@@ -66,6 +66,60 @@ To add a 6th client:
 
 To remove a client: delete its service block and its volumes declaration.
 
+## Reset to Clean Baseline
+
+Use these steps to delete all measurements and restore each service to its fresh-install state
+(ServerService re-seeded with reference data; each ClientService empty and ready to pull reference data).
+
+**Prerequisites:** all containers running (`docker-compose up`).
+
+**Step 1 — Reset ServerService** (deletes all measurements, re-seeds reference data):
+
+```bash
+curl -X POST http://localhost:5000/api/v1/admin/reset
+```
+
+Expected response: `{"message":"ServerService reset complete."}`
+
+**Step 2 — Reset each ClientService** (repeat for ports 5001–5005):
+
+```bash
+curl -X POST http://localhost:5001/api/v1/admin/reset
+curl -X POST http://localhost:5002/api/v1/admin/reset
+curl -X POST http://localhost:5003/api/v1/admin/reset
+curl -X POST http://localhost:5004/api/v1/admin/reset
+curl -X POST http://localhost:5005/api/v1/admin/reset
+```
+
+Expected response: `{"message":"ClientService reset complete. Restart or trigger reference pull to reload reference data."}`
+
+**Step 3 — Reload reference data on each ClientService** (or restart the containers):
+
+```bash
+curl -X POST http://localhost:5001/api/v1/admin/pull-reference-data
+curl -X POST http://localhost:5002/api/v1/admin/pull-reference-data
+curl -X POST http://localhost:5003/api/v1/admin/pull-reference-data
+curl -X POST http://localhost:5004/api/v1/admin/pull-reference-data
+curl -X POST http://localhost:5005/api/v1/admin/pull-reference-data
+```
+
+Expected response: `{"message":"Reference data loaded."}`
+
+**Alternatively** — use the UI buttons on each service's home page:
+- ServerService (`http://localhost:5000`): click **Reset to Baseline**
+- Each ClientService (`http://localhost:5001` – `5005`): click **Reset Client DB**, then **Pull Reference Data**
+
+**Expected clean state:**
+
+| Entity        | ServerService | Each ClientService |
+|---------------|---------------|--------------------|
+| Users         | 5             | 5                  |
+| Buildings     | 2             | 2                  |
+| Rooms         | 4             | 4                  |
+| Surfaces      | 8             | 8                  |
+| Cells         | 16            | 16                 |
+| Measurements  | 0             | 0                  |
+
 ## Running Tests
 
 ```bash
