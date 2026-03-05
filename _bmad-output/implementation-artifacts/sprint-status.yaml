@@ -52,7 +52,7 @@ development_status:
   1-2-service-health-and-status-verification: done
   1-3-configurable-scenario-parameters: done
   1-4-initial-database-seeding-from-baseline-data: done
-  1-5-reset-environment-to-clean-baseline: backlog
+  1-5-reset-environment-to-clean-baseline: ready-for-dev
   epic-1-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────────────────────
