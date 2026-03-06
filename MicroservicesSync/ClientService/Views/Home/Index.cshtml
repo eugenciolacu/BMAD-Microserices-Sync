@@ -38,6 +38,15 @@
         <button id="btnGenerate" onclick="generateMeasurements()" class="btn btn-primary">Generate Measurements</button>
         <div id="generateResult" class="mt-2"></div>
     </div>
+
+    <div class="mb-3">
+        <h4>Push Measurements to ServerService</h4>
+        <p>Pushes all unsynced local measurements (where <code>SyncedAt == null</code>) to ServerService
+           in batched, transactional form. The server applies all batches in a single transaction.</p>
+        <p><em>Prerequisites: measurements must be generated on this instance first.</em></p>
+        <button id="btnPush" onclick="pushMeasurements()" class="btn btn-success">Push Measurements</button>
+        <div id="pushResult" class="mt-2"></div>
+    </div>
 </div>
 
 <script>
@@ -121,5 +130,32 @@
                 box.appendChild(el);
             })
             .finally(() => { document.getElementById('btnGenerate').disabled = false; });
+    }
+
+    function pushMeasurements() {
+        document.getElementById('btnPush').disabled = true;
+        fetch('/api/v1/measurements/push', { method: 'POST' })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Request failed (' + r.status + ')');
+                return data;
+            })
+            .then(data => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-success mt-2';
+                el.textContent = data.message;
+                const box = document.getElementById('pushResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Push failed: ' + (err.message || err);
+                const box = document.getElementById('pushResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnPush').disabled = false; });
     }
 </script>

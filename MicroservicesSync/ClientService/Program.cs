@@ -38,6 +38,7 @@ builder.Services.Configure<ClientIdentityOptions>(
     builder.Configuration.GetSection(ClientIdentityOptions.SectionName));
 
 builder.Services.AddScoped<MeasurementGenerationService>();
+builder.Services.AddScoped<MeasurementSyncService>();
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 # Story 2.2: Transactional, Batched Server-Side Measurement Push
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,8 +26,8 @@ so that either all pushed measurements for that client are applied or none are, 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Define push DTOs on ServerService** (AC: #1, #2)
-  - [ ] 1.1 Create `ServerService/Models/Sync/MeasurementPushDto.cs` with three classes:
+- [x] **Task 1: Define push DTOs on ServerService** (AC: #1, #2)
+  - [x] 1.1 Create `ServerService/Models/Sync/MeasurementPushDto.cs` with three classes:
     ```csharp
     namespace ServerService.Models.Sync;
 
@@ -51,17 +51,17 @@ so that either all pushed measurements for that client are applied or none are, 
         public string Message { get; set; } = string.Empty;
     }
     ```
-  - [ ] 1.2 **STOP HERE** — Do NOT add `SyncedAt` to `MeasurementPushItemDto`. The server always sets
+  - [x] 1.2 **STOP HERE** — Do NOT add `SyncedAt` to `MeasurementPushItemDto`. The server always sets
     `SyncedAt = null` when storing pushed measurements; the client sets its own `SyncedAt` after
     a successful push response.
 
-- [ ] **Task 2: Create `SyncMeasurementsController` on ServerService** (AC: #1, #2, #3)
-  - [ ] 2.1 Create `ServerService/Controllers/SyncMeasurementsController.cs`:
+- [x] **Task 2: Create `SyncMeasurementsController` on ServerService** (AC: #1, #2, #3)
+  - [x] 2.1 Create `ServerService/Controllers/SyncMeasurementsController.cs`:
     - `[ApiController]`, `[Route("api/v1/sync")]`, extends `ControllerBase`
     - Constructor injects: `ServerDbContext db`, `IOptions<SyncOptions> syncOptions`,
       `ILogger<SyncMeasurementsController> logger`
     - Private fields: `_db`, `_batchSize = syncOptions.Value.BatchSize`, `_logger`
-  - [ ] 2.2 Implement `[HttpPost("measurements/push")]` endpoint:
+  - [x] 2.2 Implement `[HttpPost("measurements/push")]` endpoint:
     ```csharp
     [HttpPost("measurements/push")]
     public async Task<IActionResult> Push(
@@ -116,7 +116,7 @@ so that either all pushed measurements for that client are applied or none are, 
         }
     }
     ```
-  - [ ] 2.3 Add the necessary `using` statements:
+  - [x] 2.3 Add the necessary `using` statements:
     ```csharp
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Options;
@@ -125,14 +125,14 @@ so that either all pushed measurements for that client are applied or none are, 
     using Sync.Domain.Entities;
     using Sync.Infrastructure.Data;
     ```
-  - [ ] 2.4 **CRITICAL**: EF Core manual transaction pattern with SQL Server — `BeginTransactionAsync`
+  - [x] 2.4 **CRITICAL**: EF Core manual transaction pattern with SQL Server — `BeginTransactionAsync`
     returns an `IDbContextTransaction` that must be disposed. Use `await using var transaction = ...`
     to guarantee disposal even on exception. The `try/catch` block should call `CommitAsync` on
     success — rollback happens automatically when the transaction is disposed without committing
     (but explicit `RollbackAsync` in catch is acceptable and should be included for clarity/logging).
 
-- [ ] **Task 3: Define push DTOs on ClientService** (AC: #1)
-  - [ ] 3.1 Create `ClientService/Models/Sync/MeasurementPushDto.cs`:
+- [x] **Task 3: Define push DTOs on ClientService** (AC: #1)
+  - [x] 3.1 Create `ClientService/Models/Sync/MeasurementPushDto.cs`:
     ```csharp
     namespace ClientService.Models.Sync;
 
@@ -154,25 +154,25 @@ so that either all pushed measurements for that client are applied or none are, 
         public Guid CellId { get; set; }
     }
     ```
-  - [ ] 3.2 Use `internal sealed` — consistent with existing `ClientService/Models/Sync/SyncReferenceDataDto.cs` pattern.
-  - [ ] 3.3 Name them `ClientMeasurementPush*` (not `MeasurementPush*`) to avoid namespace collision
+  - [x] 3.2 Use `internal sealed` — consistent with existing `ClientService/Models/Sync/SyncReferenceDataDto.cs` pattern.
+  - [x] 3.3 Name them `ClientMeasurementPush*` (not `MeasurementPush*`) to avoid namespace collision
     if server and client are ever referenced in the same context. The `Client` prefix is a deliberate
     disambiguation, NOT a sign of wrong architecture.
 
-- [ ] **Task 4: Create `MeasurementSyncService` on ClientService** (AC: #1, #2, #3)
-  - [ ] 4.1 Create `ClientService/Services/MeasurementSyncService.cs`:
+- [x] **Task 4: Create `MeasurementSyncService` on ClientService** (AC: #1, #2, #3)
+  - [x] 4.1 Create `ClientService/Services/MeasurementSyncService.cs`:
     - `public class MeasurementSyncService`
     - Constructor injects: `ClientDbContext db`, `IHttpClientFactory httpClientFactory`,
       `IOptions<SyncOptions> syncOptions`, `ILogger<MeasurementSyncService> logger`
     - Private fields: `_db`, `_httpClientFactory`, `_batchSize = syncOptions.Value.BatchSize`, `_logger`
-  - [ ] 4.2 Add `// NOTE (M2.2):` comment at the top of the class:
+  - [x] 4.2 Add `// NOTE (M2.2):` comment at the top of the class:
     ```csharp
     // NOTE (M2.2): MeasurementSyncService injects ClientDbContext directly (not via IMeasurementRepository)
     // and IHttpClientFactory to call ServerService. This is a deliberate, acknowledged deviation from strict
     // Application-layer separation, consistent with MeasurementGenerationService (NOTE M2.1) and
     // AdminController (NOTE M4). Full repository abstraction is out of scope for Story 2.2.
     ```
-  - [ ] 4.3 Implement `public async Task<MeasurementPushResult> PushAsync(CancellationToken cancellationToken = default)`:
+  - [x] 4.3 Implement `public async Task<MeasurementPushResult> PushAsync(CancellationToken cancellationToken = default)`:
     ```csharp
     public async Task<MeasurementPushResult> PushAsync(CancellationToken cancellationToken = default)
     {
@@ -237,11 +237,11 @@ so that either all pushed measurements for that client are applied or none are, 
             $"Pushed {pending.Count} measurements to ServerService.");
     }
     ```
-  - [ ] 4.4 Add the `MeasurementPushResult` record at the bottom of the file (same file, below class):
+  - [x] 4.4 Add the `MeasurementPushResult` record at the bottom of the file (same file, below class):
     ```csharp
     public record MeasurementPushResult(int Count, string Message);
     ```
-  - [ ] 4.5 Add the necessary `using` statements:
+  - [x] 4.5 Add the necessary `using` statements:
     ```csharp
     using ClientService.Models.Sync;
     using Microsoft.EntityFrameworkCore;
@@ -251,11 +251,11 @@ so that either all pushed measurements for that client are applied or none are, 
     using System.Net.Http.Json;
     ```
 
-- [ ] **Task 5: Add push endpoint to `MeasurementsController`** (AC: #1, #2, #3)
-  - [ ] 5.1 Open `ClientService/Controllers/MeasurementsController.cs` — currently has only
+- [x] **Task 5: Add push endpoint to `MeasurementsController`** (AC: #1, #2, #3)
+  - [x] 5.1 Open `ClientService/Controllers/MeasurementsController.cs` — currently has only
     `[HttpPost("generate")]`. Add `MeasurementSyncService` injection alongside `MeasurementGenerationService`.
     Update the constructor to accept both services.
-  - [ ] 5.2 Add `[HttpPost("push")]` action:
+  - [x] 5.2 Add `[HttpPost("push")]` action:
     ```csharp
     [HttpPost("push")]
     public async Task<IActionResult> Push(CancellationToken cancellationToken)
@@ -278,22 +278,22 @@ so that either all pushed measurements for that client are applied or none are, 
         }
     }
     ```
-  - [ ] 5.3 **STOP HERE** — Do NOT add `GetPaged`, `GetById`, `Create`, `Update`, `Delete`, or
+  - [x] 5.3 **STOP HERE** — Do NOT add `GetPaged`, `GetById`, `Create`, `Update`, `Delete`, or
     `Pull` endpoints. jqGrid CRUD is Story 3.2 scope. Pull is Story 2.3 scope.
 
-- [ ] **Task 6: Register `MeasurementSyncService` in `ClientService/Program.cs`** (AC: #1)
-  - [ ] 6.1 Add after the existing `builder.Services.AddScoped<MeasurementGenerationService>();` line:
+- [x] **Task 6: Register `MeasurementSyncService` in `ClientService/Program.cs`** (AC: #1)
+  - [x] 6.1 Add after the existing `builder.Services.AddScoped<MeasurementGenerationService>();` line:
     ```csharp
     builder.Services.AddScoped<MeasurementSyncService>();
     ```
-  - [ ] 6.2 Do NOT restructure `Program.cs`. Add only this one line in the DI registration block.
-  - [ ] 6.3 `System.Net.Http.Json` namespace is already available via `ClientService.csproj` transitive
+  - [x] 6.2 Do NOT restructure `Program.cs`. Add only this one line in the DI registration block.
+  - [x] 6.3 `System.Net.Http.Json` namespace is already available via `ClientService.csproj` transitive
     reference — no new NuGet package is required.
 
-- [ ] **Task 7: Add "Push Measurements" UI to ClientService home page** (AC: #1, #2)
-  - [ ] 7.1 Open `ClientService/Views/Home/Index.cshtml` — study the existing "Generate Measurements"
+- [x] **Task 7: Add "Push Measurements" UI to ClientService home page** (AC: #1, #2)
+  - [x] 7.1 Open `ClientService/Views/Home/Index.cshtml` — study the existing "Generate Measurements"
     block (added in Story 2.1) to match the visual and script style exactly.
-  - [ ] 7.2 Add a "Push Measurements" section **after** the "Generate Measurements" `<div>` block
+  - [x] 7.2 Add a "Push Measurements" section **after** the "Generate Measurements" `<div>` block
     (still within the "Sync Scenario Controls" section):
     ```html
     <div class="mb-3">
@@ -305,7 +305,7 @@ so that either all pushed measurements for that client are applied or none are, 
         <div id="pushResult" class="mt-2"></div>
     </div>
     ```
-  - [ ] 7.3 Add JavaScript function (within the existing `<script>` block, alongside `generateMeasurements()`):
+  - [x] 7.3 Add JavaScript function (within the existing `<script>` block, alongside `generateMeasurements()`):
     ```javascript
     function pushMeasurements() {
         document.getElementById('btnPush').disabled = true;
@@ -335,8 +335,8 @@ so that either all pushed measurements for that client are applied or none are, 
     }
     ```
 
-- [ ] **Task 8: Write tests** (AC: #1, #2, #3)
-  - [ ] 8.1 Create `MicroservicesSync.Tests/Measurements/MeasurementPushTests.cs`
+- [x] **Task 8: Write tests** (AC: #1, #2, #3)
+  - [x] 8.1 Create `MicroservicesSync.Tests/Measurements/MeasurementPushTests.cs`
     - **Server-side tests**: use `TestableServerDbContext` (already defined in
       `MicroservicesSync.Tests/Reset/DatabaseResetterTests.cs`) — copy the pattern (SqliteConnection +
       TestableServerDbContext constructor) exactly. The `TestableServerDbContext` class is private to
@@ -348,18 +348,18 @@ so that either all pushed measurements for that client are applied or none are, 
     - Create `IOptions<SyncOptions>` via: `Options.Create(new SyncOptions { BatchSize = 3 })`
       (use `BatchSize = 3` in tests to make batching behavior observable with smaller datasets).
     - Seed required FK parents (Users, Buildings, Rooms, Surfaces, Cells) before inserting Measurements.
-  - [ ] 8.2 Implement the following test cases:
+  - [x] 8.2 Implement the following test cases:
     - `Push_ValidMeasurements_AllStoredOnServer`: push 6 measurements with `BatchSize=3` → verify all 6 in `_serverDb.Measurements`
     - `Push_EmptyRequest_ReturnsBadRequestResult`: pass empty `MeasurementPushRequest` → `IActionResult` is `BadRequestObjectResult`
     - `Push_BatchedCorrectly_AllMeasurementsPresent`: push 12 measurements with `BatchSize=3` → verify all 12 present and distinct IDs
     - `Push_NoPendingMeasurements_ReturnsZeroCount`: call `MeasurementSyncService.PushAsync()` when local DB has no measurements with `SyncedAt == null` → result `Count == 0`
-  - [ ] 8.3 **Note on AC#3 (rollback) testing**: A unit test that verifies transaction rollback on DB error
+  - [x] 8.3 **Note on AC#3 (rollback) testing**: A unit test that verifies transaction rollback on DB error
     is difficult without SQL Server. Rely on the Docker smoke test for this scenario. You MAY add a
     test that verifies the controller returns 500 if `ServerDbContext.SaveChanges` throws (by using a
     mock or by crafting an invalid FK), but this is **optional** for Story 2.2.
-  - [ ] 8.4 Run `dotnet build MicrosericesSync.sln` — 0 errors, 0 warnings.
-  - [ ] 8.5 Run `dotnet test` — all 26 existing tests pass; new push tests pass (30 total: 26 + 4).
-  - [ ] 8.6 Manual Docker smoke test: `docker-compose up --build`, then:
+  - [x] 8.4 Run `dotnet build MicrosericesSync.sln` — 0 errors, 0 warnings.
+  - [x] 8.5 Run `dotnet test` — all 26 existing tests pass; new push tests pass (30 total: 26 + 4).
+  - [x] 8.6 Manual Docker smoke test: `docker-compose up --build`, then:
     1. Trigger `POST /api/v1/measurements/generate` on each client
     2. Inspect each client Measurements grid — verify all have `SyncedAt = null`
     3. Trigger `POST /api/v1/measurements/push` on client1
@@ -577,10 +577,36 @@ transaction rolls back — confirming AC#3 behavior.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.6
 
 ### Debug Log References
 
+No blockers encountered. All tasks implemented cleanly on first pass.
+
 ### Completion Notes List
 
+- **Task 1**: Created `ServerService/Models/Sync/MeasurementPushDto.cs` with `MeasurementPushRequest`, `MeasurementPushItemDto`, and `MeasurementPushResponse`. `SyncedAt` intentionally excluded from DTO per spec.
+- **Task 2**: Created `SyncMeasurementsController` at `POST /api/v1/sync/measurements/push`. Uses `await using var transaction = await _db.Database.BeginTransactionAsync(...)` with explicit `RollbackAsync` in catch for clarity. In-memory batching (GroupBy) with single transaction wrapping all batches.
+- **Task 3**: Created `ClientService/Models/Sync/MeasurementPushDto.cs` with `internal sealed` classes named `ClientMeasurementPush*` to avoid namespace collision. Consistent with `SyncReferenceDataDto.cs` pattern.
+- **Task 4**: Created `MeasurementSyncService` with `// NOTE (M2.2)` deviation comment. Uses `AsNoTracking()` for read query, `PostAsJsonAsync` for HTTP push, and `ExecuteUpdateAsync` for bulk `SyncedAt` update (bypasses EF change-tracking/ConcurrencyStamp concern).
+- **Task 5**: Updated `MeasurementsController` — added `MeasurementSyncService` injection alongside `MeasurementGenerationService` and added `[HttpPost("push")]` action with same error-handling shape as `generate`.
+- **Task 6**: Added `builder.Services.AddScoped<MeasurementSyncService>()` immediately after `AddScoped<MeasurementGenerationService>()` in `ClientService/Program.cs`. No other changes to `Program.cs`.
+- **Task 7**: Added "Push Measurements" `<div>` block after "Generate Measurements" in `Index.cshtml`. Added `pushMeasurements()` JavaScript function in the existing `<script>` block matching the established fetch pattern.
+- **Task 8**: Added `ServerService` project reference to test project. Created `MeasurementPushTests.cs` with local `TestableServerDbContext` (same SQLite-compatible override pattern). 4 tests: server push (6 measurements, BatchSize=3), empty request → BadRequest, 12 measurements all stored with distinct IDs, and no-pending early-exit returning Count=0. `dotnet build`: 0 errors, 0 warnings. `dotnet test`: 30/30 passing (26 existing + 4 new).
+
 ### File List
+
+- `ServerService/Models/Sync/MeasurementPushDto.cs` — CREATED
+- `ServerService/Controllers/SyncMeasurementsController.cs` — CREATED
+- `ClientService/Models/Sync/MeasurementPushDto.cs` — CREATED
+- `ClientService/Services/MeasurementSyncService.cs` — CREATED
+- `ClientService/Controllers/MeasurementsController.cs` — MODIFIED
+- `ClientService/Views/Home/Index.cshtml` — MODIFIED
+- `ClientService/Program.cs` — MODIFIED
+- `MicroservicesSync.Tests/Measurements/MeasurementPushTests.cs` — CREATED (5 tests: 4 original + 1 rollback/AC#3)
+- `MicroservicesSync.Tests/MicroservicesSync.Tests.csproj` — MODIFIED (added ServerService project reference)
+
+### Change Log
+
+- 2026-03-06: Implemented Story 2.2 — transactional batched server-side measurement push. Added `POST /api/v1/sync/measurements/push` on ServerService (single DB transaction, in-memory batching). Added `MeasurementSyncService` on ClientService (push unsynced measurements, `ExecuteUpdateAsync` for bulk `SyncedAt`). Added `POST /api/v1/measurements/push` on ClientService controller + "Push Measurements" UI button. 4 new unit tests; 30/30 passing.
+- 2026-03-06: Code review by GitHub Copilot (Claude Sonnet 4.6). Fixed 4 medium issues: (M1) `RollbackAsync` called with a cancellable token in catch block — changed to `CancellationToken.None`; (M2) dead `_batchSize` field and `IOptions<SyncOptions>` constructor parameter removed from `MeasurementSyncService` (client-side batching is not performed); (M3) `BatchSize <= 0` guard added to `SyncMeasurementsController` constructor; (M4) AC#3 rollback test added (`Push_DuplicatePush_RollsBackAndReturns500`). 4 low issues noted (ex.Message exposure, null Measurements guard, async keyword in generateMeasurements(), ID fidelity assertion). Total: 31/31 tests passing. Story → done.
