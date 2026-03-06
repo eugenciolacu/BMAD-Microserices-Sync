@@ -59,3 +59,8 @@ nunit-*.xml
 .vs/
 *.user
 *.suo
+
+# SQLite runtime files (Docker volumes handle persistence; WAL/SHM are transient)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

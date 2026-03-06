@@ -1,5 +1,7 @@
 using ClientService.HealthChecks;
 using ClientService.Models.Sync;
+using ClientService.Options;
+using ClientService.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Sync.Application.Options;
@@ -32,6 +34,10 @@ builder.Services.AddHealthChecks()
 
 // Sync scenario options — configurable via SyncOptions__* env vars or appsettings.json
 builder.Services.Configure<SyncOptions>(builder.Configuration.GetSection(SyncOptions.SectionName));
+builder.Services.Configure<ClientIdentityOptions>(
+    builder.Configuration.GetSection(ClientIdentityOptions.SectionName));
+
+builder.Services.AddScoped<MeasurementGenerationService>();
 
 var app = builder.Build();
 

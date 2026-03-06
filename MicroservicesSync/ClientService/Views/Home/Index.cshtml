@@ -27,6 +27,19 @@
     </div>
 </div>
 
+<div class="mt-4">
+    <h2>Sync Scenario Controls</h2>
+
+    <div class="mb-3">
+        <h4>Generate Measurements</h4>
+        <p>Generates the configured number of measurements (<code>SyncOptions:MeasurementsPerClient</code>) for this client instance,
+           tagged with this client's identity (<code>ClientIdentity:UserId</code>).</p>
+        <p><em>Prerequisites: reset to baseline + pull reference data must be completed on this instance before generating.</em></p>
+        <button id="btnGenerate" onclick="generateMeasurements()" class="btn btn-primary">Generate Measurements</button>
+        <div id="generateResult" class="mt-2"></div>
+    </div>
+</div>
+
 <script>
     function resetClient() {
         if (!confirm('Are you sure? This will delete all measurements and all reference data.\nYou will need to pull reference data again or restart the container.')) return;
@@ -81,5 +94,32 @@
                 box.appendChild(el);
             })
             .finally(() => { document.getElementById('btnPull').disabled = false; });
+    }
+
+    async function generateMeasurements() {
+        document.getElementById('btnGenerate').disabled = true;
+        fetch('/api/v1/measurements/generate', { method: 'POST' })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Request failed (' + r.status + ')');
+                return data;
+            })
+            .then(data => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-success mt-2';
+                el.textContent = data.message;
+                const box = document.getElementById('generateResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Generation failed: ' + (err.message || err);
+                const box = document.getElementById('generateResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnGenerate').disabled = false; });
     }
 </script>
