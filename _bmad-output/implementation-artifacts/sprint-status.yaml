@@ -63,8 +63,8 @@ development_status:
   # batched operations inside a single transaction per push/pull.
   # FRs covered: FR6, FR7, FR8, FR9
   # ─────────────────────────────────────────────────────────────────────────────
-  epic-2: backlog
-  2-1-client-side-measurement-generation-per-instance: backlog
+  epic-2: in-progress
+  2-1-client-side-measurement-generation-per-instance: ready-for-dev
   2-2-transactional-batched-server-side-measurement-push: backlog
   2-3-transactional-batched-client-side-pull-of-consolidated-measurements: backlog
   2-4-edge-case-multi-client-scenario-variant-with-batching: backlog
