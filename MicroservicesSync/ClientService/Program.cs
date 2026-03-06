@@ -18,8 +18,12 @@ builder.Services.AddDbContext<ClientDbContext>(options =>
 
 // Named HttpClient for inter-service communication with ServerService
 builder.Services.AddHttpClient("ServerService", client =>
-    client.BaseAddress = new Uri(
-        builder.Configuration["SERVER_BASE_URL"] ?? "http://localhost:8080"));
+{
+    var serverUrl = builder.Configuration["SERVER_BASE_URL"]        // docker/env
+                 ?? builder.Configuration["ServerBaseUrl"]          // appsettings.json
+                 ?? "http://localhost:8080";                        // ultimate fallback
+    client.BaseAddress = new Uri(serverUrl);
+});
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ClientDbContext>()
