@@ -61,4 +61,25 @@ public class MeasurementsController : ControllerBase
             return StatusCode(500, new { message = "Push failed.", error = ex.Message });
         }
     }
+
+    [HttpPost("pull")]
+    public async Task<IActionResult> Pull(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _syncService.PullAsync(cancellationToken);
+            _logger.LogInformation("ClientService: pull completed — {Count} new measurements.", result.Count);
+            return Ok(new { message = result.Message, pulled = result.Count });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "ClientService: pull failed — operation error.");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ClientService: pull failed unexpectedly.");
+            return StatusCode(500, new { message = "Pull failed.", error = ex.Message });
+        }
+    }
 }

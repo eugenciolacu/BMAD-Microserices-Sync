@@ -173,6 +173,7 @@ public class MeasurementPushTests : IDisposable
         var syncService = new MeasurementSyncService(
             _clientDb,
             new StubHttpClientFactory(),
+            MsOptions.Create(new SyncOptions { BatchSize = 3 }),
             NullLogger<MeasurementSyncService>.Instance);
 
         var result = await syncService.PushAsync();

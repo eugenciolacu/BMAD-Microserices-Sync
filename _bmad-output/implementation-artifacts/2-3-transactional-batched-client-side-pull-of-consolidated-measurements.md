@@ -1,6 +1,6 @@
 # Story 2.3: Transactional, Batched Client-Side Pull of Consolidated Measurements
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,8 +26,8 @@ so that each client either fully converges to the server dataset or not at all f
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add pull DTOs to ServerService** (AC: #1)
-  - [ ] 1.1 Create `ServerService/Models/Sync/MeasurementPullDto.cs` with two classes:
+- [x] **Task 1: Add pull DTOs to ServerService** (AC: #1)
+  - [x] 1.1 Create `ServerService/Models/Sync/MeasurementPullDto.cs` with two classes:
     ```csharp
     namespace ServerService.Models.Sync;
 
@@ -46,13 +46,13 @@ so that each client either fully converges to the server dataset or not at all f
         public int Total { get; set; }
     }
     ```
-  - [ ] 1.2 **Note**: No `SyncedAt` in the pull DTO — the server stores all measurements with
+  - [x] 1.2 **Note**: No `SyncedAt` in the pull DTO — the server stores all measurements with
     `SyncedAt = null`. The client determines its own `SyncedAt` state locally. Do NOT add it.
 
-- [ ] **Task 2: Add GET pull endpoint to `SyncMeasurementsController` on ServerService** (AC: #1, #2)
-  - [ ] 2.1 Open `ServerService/Controllers/SyncMeasurementsController.cs` — currently has only
+- [x] **Task 2: Add GET pull endpoint to `SyncMeasurementsController` on ServerService** (AC: #1, #2)
+  - [x] 2.1 Open `ServerService/Controllers/SyncMeasurementsController.cs` — currently has only
     `[HttpPost("measurements/push")]`. Add the pull endpoint to the same controller class.
-  - [ ] 2.2 Add `[HttpGet("measurements/pull")]` action:
+  - [x] 2.2 Add `[HttpGet("measurements/pull")]` action:
     ```csharp
     [HttpGet("measurements/pull")]
     public async Task<IActionResult> Pull(CancellationToken cancellationToken)
@@ -80,19 +80,19 @@ so that each client either fully converges to the server dataset or not at all f
         });
     }
     ```
-  - [ ] 2.3 Add the `using` statements needed (most are already present from Task 1 of push):
+  - [x] 2.3 Add the `using` statements needed (most are already present from Task 1 of push):
     ```csharp
     using Microsoft.EntityFrameworkCore; // for ToListAsync / AsNoTracking
     ```
     The `ServerService.Models.Sync` namespace is already in scope from the push implementation's
     existing `using` block. Add `using Microsoft.EntityFrameworkCore;` only if not already present.
-  - [ ] 2.4 **CRITICAL**: ServerService returns ALL measurements — no pagination/filtering for MVP.
+  - [x] 2.4 **CRITICAL**: ServerService returns ALL measurements — no pagination/filtering for MVP.
     Do NOT add `since` or `lastSync` query parameters. Story 2.3 is about convergence, not incremental sync.
-  - [ ] 2.5 **CRITICAL**: No transaction needed on the ServerService pull handler — it is a read-only
+  - [x] 2.5 **CRITICAL**: No transaction needed on the ServerService pull handler — it is a read-only
     query. Transactions are only required for write operations (push).
 
-- [ ] **Task 3: Add pull DTOs to ClientService** (AC: #1)
-  - [ ] 3.1 Create `ClientService/Models/Sync/MeasurementPullDto.cs`:
+- [x] **Task 3: Add pull DTOs to ClientService** (AC: #1)
+  - [x] 3.1 Create `ClientService/Models/Sync/MeasurementPullDto.cs`:
     ```csharp
     namespace ClientService.Models.Sync;
 
@@ -115,14 +115,14 @@ so that each client either fully converges to the server dataset or not at all f
         public Guid CellId { get; set; }
     }
     ```
-  - [ ] 3.2 Use `internal sealed` — consistent with existing `ClientService/Models/Sync/SyncReferenceDataDto.cs`
+  - [x] 3.2 Use `internal sealed` — consistent with existing `ClientService/Models/Sync/SyncReferenceDataDto.cs`
     and `ClientMeasurementPushRequest` / `ClientMeasurementPushItemDto` patterns.
-  - [ ] 3.3 Name them `ClientMeasurementPull*` (not `MeasurementPull*`) to avoid namespace collision
+  - [x] 3.3 Name them `ClientMeasurementPull*` (not `MeasurementPull*`) to avoid namespace collision
     with ServerService DTOs. The `Client` prefix is intentional disambiguation.
 
-- [ ] **Task 4: Modify `MeasurementSyncService` on ClientService** (AC: #1, #2, #3)
-  - [ ] 4.1 Open `ClientService/Services/MeasurementSyncService.cs`.
-  - [ ] 4.2 **Add `IOptions<SyncOptions>` to the constructor** — PullAsync needs `_batchSize`
+- [x] **Task 4: Modify `MeasurementSyncService` on ClientService** (AC: #1, #2, #3)
+  - [x] 4.1 Open `ClientService/Services/MeasurementSyncService.cs`.
+  - [x] 4.2 **Add `IOptions<SyncOptions>` to the constructor** — PullAsync needs `_batchSize`
     to partition the received measurements into in-memory batches for local transaction processing.
     Update constructor signature:
     ```csharp
@@ -141,14 +141,14 @@ so that each client either fully converges to the server dataset or not at all f
         _logger = logger;
     }
     ```
-  - [ ] 4.3 Add private field `_batchSize` to the class:
+  - [x] 4.3 Add private field `_batchSize` to the class:
     ```csharp
     private readonly int _batchSize;
     ```
     Place it after `_httpClientFactory` field declaration, before `_logger`.
-  - [ ] 4.4 Add `using Microsoft.Extensions.Options;` and `using Sync.Application.Options;` if not
+  - [x] 4.4 Add `using Microsoft.Extensions.Options;` and `using Sync.Application.Options;` if not
     already present. They are already present from `PushAsync` implementation — **do NOT add duplicates**.
-  - [ ] 4.5 Add `PullAsync()` method after `PushAsync()`:
+  - [x] 4.5 Add `PullAsync()` method after `PushAsync()`:
     ```csharp
     public async Task<MeasurementPullResult> PullAsync(CancellationToken cancellationToken = default)
     {
@@ -227,21 +227,21 @@ so that each client either fully converges to the server dataset or not at all f
         }
     }
     ```
-  - [ ] 4.6 Add `MeasurementPullResult` record at the bottom of the file (alongside `MeasurementPushResult`):
+  - [x] 4.6 Add `MeasurementPullResult` record at the bottom of the file (alongside `MeasurementPushResult`):
     ```csharp
     public record MeasurementPullResult(int Count, string Message);
     ```
-  - [ ] 4.7 Add the following `using` statement (if not already present):
+  - [x] 4.7 Add the following `using` statement (if not already present):
     ```csharp
     using Sync.Domain.Entities; // for Measurement entity
     ```
     Check the top of the file — `Sync.Domain.Entities` should already be available transitively.
     If not present, add it explicitly.
 
-- [ ] **Task 5: Add `[HttpPost("pull")]` action to `MeasurementsController` on ClientService** (AC: #1, #2, #3)
-  - [ ] 5.1 Open `ClientService/Controllers/MeasurementsController.cs` — currently has `generate` and `push`.
+- [x] **Task 5: Add `[HttpPost("pull")]` action to `MeasurementsController` on ClientService** (AC: #1, #2, #3)
+  - [x] 5.1 Open `ClientService/Controllers/MeasurementsController.cs` — currently has `generate` and `push`.
     Add the pull action using the same error-handling shape.
-  - [ ] 5.2 Add `[HttpPost("pull")]` action after the push action:
+  - [x] 5.2 Add `[HttpPost("pull")]` action after the push action:
     ```csharp
     [HttpPost("pull")]
     public async Task<IActionResult> Pull(CancellationToken cancellationToken)
@@ -264,22 +264,22 @@ so that each client either fully converges to the server dataset or not at all f
         }
     }
     ```
-  - [ ] 5.3 **STOP HERE** — Do NOT add `GetPaged`, `GetById`, `Create`, `Update`, or `Delete` endpoints.
+  - [x] 5.3 **STOP HERE** — Do NOT add `GetPaged`, `GetById`, `Create`, `Update`, or `Delete` endpoints.
     jqGrid CRUD for Measurements is Story 3.2 scope. Do not implement it here.
-  - [ ] 5.4 Note: The controller already has `_syncService` (injected `MeasurementSyncService`)
+  - [x] 5.4 Note: The controller already has `_syncService` (injected `MeasurementSyncService`)
     and `_logger` — no constructor changes needed.
 
-- [ ] **Task 6: Register updated `MeasurementSyncService` constructor in DI** (AC: #1)
-  - [ ] 6.1 Open `ClientService/Program.cs`. The `IOptions<SyncOptions>` parameter added in Task 4
+- [x] **Task 6: Register updated `MeasurementSyncService` constructor in DI** (AC: #1)
+  - [x] 6.1 Open `ClientService/Program.cs`. The `IOptions<SyncOptions>` parameter added in Task 4
     is automatically satisfied by the existing `builder.Services.Configure<SyncOptions>(...)` line.
     **No changes to `Program.cs` are required.** ASP.NET Core DI resolves `IOptions<T>` for any
     configured section automatically when the scoped service is resolved.
-  - [ ] 6.2 Do NOT restructure or add any other lines to `Program.cs` for this story.
+  - [x] 6.2 Do NOT restructure or add any other lines to `Program.cs` for this story.
 
-- [ ] **Task 7: Add "Pull Measurements" UI to ClientService home page** (AC: #1, #2)
-  - [ ] 7.1 Open `ClientService/Views/Home/Index.cshtml` — study the existing "Push Measurements"
+- [x] **Task 7: Add "Pull Measurements" UI to ClientService home page** (AC: #1, #2)
+  - [x] 7.1 Open `ClientService/Views/Home/Index.cshtml` — study the existing "Push Measurements"
     block to match visual and script style exactly.
-  - [ ] 7.2 Add a "Pull Measurements" section **after** the "Push Measurements" `<div>` block
+  - [x] 7.2 Add a "Pull Measurements" section **after** the "Push Measurements" `<div>` block
     (still within the "Sync Scenario Controls" section):
     ```html
     <div class="mb-3">
@@ -292,7 +292,7 @@ so that each client either fully converges to the server dataset or not at all f
         <div id="pullMeasurementsResult" class="mt-2"></div>
     </div>
     ```
-  - [ ] 7.3 Add JavaScript function (within the existing `<script>` block, alongside
+  - [x] 7.3 Add JavaScript function (within the existing `<script>` block, alongside
     `generateMeasurements()` and `pushMeasurements()`):
     ```javascript
     function pullMeasurements() {
@@ -322,12 +322,12 @@ so that each client either fully converges to the server dataset or not at all f
             .finally(() => { document.getElementById('btnPullMeasurements').disabled = false; });
     }
     ```
-  - [ ] 7.4 **Button ID disambiguation**: Use `btnPullMeasurements` and `pullMeasurementsResult`
+  - [x] 7.4 **Button ID disambiguation**: Use `btnPullMeasurements` and `pullMeasurementsResult`
     (NOT `btnPull` / `pullResult`) — those IDs are already used by the "Pull Reference Data" button
     in the Administration section. Using the same IDs would cause DOM conflicts.
 
-- [ ] **Task 8: Write tests** (AC: #1, #2, #3)
-  - [ ] 8.1 Create `MicroservicesSync.Tests/Measurements/MeasurementPullTests.cs`.
+- [x] **Task 8: Write tests** (AC: #1, #2, #3)
+  - [x] 8.1 Create `MicroservicesSync.Tests/Measurements/MeasurementPullTests.cs`.
     - **Server-side tests:** Use `TestableServerDbContext` — **do NOT import from MeasurementPushTests.cs**.
       Declare a local `TestableServerDbContext` in this file using the same pattern (SQLite + RowVersion
       `ValueGeneratedNever` override). Check the existing `MeasurementPushTests.cs` template exactly.
@@ -336,7 +336,7 @@ so that each client either fully converges to the server dataset or not at all f
     - Use `NullLogger<*>.Instance` for all loggers.
     - Use `Options.Create(new SyncOptions { BatchSize = 3 })` for IOptions (observable batching).
     - Use `using MsOptions = Microsoft.Extensions.Options.Options;` alias (already in push tests).
-  - [ ] 8.2 Implement the following test cases:
+  - [x] 8.2 Implement the following test cases:
 
     **Server-side tests (SyncMeasurementsController.Pull):**
 
@@ -378,7 +378,7 @@ so that each client either fully converges to the server dataset or not at all f
       - Call `PullAsync()`.
       - Assert: `result.Count == 0`; `_clientDb.Measurements.Count() == 5` (no change).
 
-  - [ ] 8.3 **Mocking `IHttpClientFactory`** — use `MockHttpMessageHandler` pattern:
+  - [x] 8.3 **Mocking `IHttpClientFactory`** — use `MockHttpMessageHandler` pattern:
     ```csharp
     // Use a simple delegating handler to return canned responses.
     var handler = new MockHttpMessageHandler(request =>
@@ -407,7 +407,7 @@ so that each client either fully converges to the server dataset or not at all f
     library (already used in the project). Check if NSubstitute or Moq is already in
     `MicroservicesSync.Tests.csproj` before adding new packages.
 
-  - [ ] 8.4 **MockHttpMessageHandler**: Define as a simple inner helper class in the test file:
+  - [x] 8.4 **MockHttpMessageHandler**: Define as a simple inner helper class in the test file:
     ```csharp
     private sealed class MockHttpMessageHandler : HttpMessageHandler
     {
@@ -419,13 +419,13 @@ so that each client either fully converges to the server dataset or not at all f
             => _handler(request);
     }
     ```
-  - [ ] 8.5 **FK seeding for client tests**: Client pull inserts Measurement entities with UserId and
+  - [x] 8.5 **FK seeding for client tests**: Client pull inserts Measurement entities with UserId and
     CellId FKs. These references MUST exist in `_clientDb` before `AddRangeAsync` is called.
     Use the same full FK chain: User → Building → Room → Surface → Cell.
     See `MeasurementGenerationTests.cs` for the complete `SeedCellsAsync` helper pattern.
-  - [ ] 8.6 Run `dotnet build MicrosericesSync.sln` — 0 errors, 0 warnings.
-  - [ ] 8.7 Run `dotnet test` — all 35 existing tests pass; new pull tests pass (~40 total: 35 + 5).
-  - [ ] 8.8 Manual Docker smoke test: `docker-compose up --build`, then:
+  - [x] 8.6 Run `dotnet build MicrosericesSync.sln` — 0 errors, 0 warnings.
+  - [x] 8.7 Run `dotnet test` — all 31 existing tests pass; new pull tests pass (36 total: 31 + 5).
+  - [x] 8.8 Manual Docker smoke test: `docker-compose up --build`, then:
     1. Reset all clients (POST `/api/v1/admin/reset` on each)
     2. Pull reference data on all clients
     3. Generate measurements on each client
@@ -584,10 +584,38 @@ and patterns that govern all implementation in this project.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.6
 
 ### Debug Log References
 
+_None — clean implementation, no debugging required._
+
 ### Completion Notes List
 
+- **Task 1**: Created `ServerService/Models/Sync/MeasurementPullDto.cs` with `MeasurementPullItemDto` and `MeasurementPullResponse` (no `SyncedAt` field per spec).
+- **Task 2**: Added `[HttpGet("measurements/pull")]` action to `SyncMeasurementsController`. Added `using Microsoft.EntityFrameworkCore;` (was missing). Read-only query using `AsNoTracking().Select().ToListAsync()` — no transaction.
+- **Task 3**: Created `ClientService/Models/Sync/MeasurementPullDto.cs` with `internal sealed` `ClientMeasurementPullResponse` and `ClientMeasurementPullItemDto`, using `Client` prefix for disambiguation.
+- **Task 4**: Updated `MeasurementSyncService` — added `using Microsoft.Extensions.Options;`, `using Sync.Application.Options;`, `using Sync.Domain.Entities;`; added `IOptions<SyncOptions>` constructor param; added `_batchSize` field; implemented `PullAsync()` with one HTTP GET call, skip-existing dedup, single SQLite transaction, in-memory batch partitioning; added `MeasurementPullResult` record. Also fixed `MeasurementPushTests.cs` to pass new 4-param constructor.
+- **Task 5**: Added `[HttpPost("pull")]` action to `MeasurementsController` matching existing error-handling shape (`InvalidOperationException → BadRequest`, `Exception → 500`).
+- **Task 6**: No `Program.cs` changes needed — `IOptions<SyncOptions>` already registered via `Configure<SyncOptions>`.
+- **Task 7**: Added "Pull Consolidated Measurements" section to `Index.cshtml` after "Push Measurements" block; uses `btnPullMeasurements` / `pullMeasurementsResult` IDs (distinct from existing `btnPull` / `pullResult` for reference data).
+- **Task 8**: Created `MicroservicesSync.Tests/Measurements/MeasurementPullTests.cs` with 5 test cases (2 server-side, 3 client-side). Uses `TestableServerDbContextForPull`, `StubHttpClientFactory`, `MockHttpMessageHandler`, FK seeding. Build: 0 errors, 0 warnings. Tests: 36 total, 36 passed (5 new pull tests).
+
+### Code Review Fixes (2026-03-07)
+
+- **HIGH-1 (AC3 rollback untested)**: Added `PullAsync_TransactionRollsBack_WhenBatchFails` test to `MeasurementPullTests.cs`. Uses a duplicate GUID across two batches to trigger an EF tracking conflict mid-pull, then asserts the Measurements table is empty after rollback. Test count: 36 → 37.
+- **HIGH-2 (TOCTOU race)**: Moved the `existingIds` existence query inside the transaction in `MeasurementSyncService.PullAsync`. The transaction now opens before the read, so concurrent pull requests cannot both pass the existence check and race to insert the same IDs.
+- **MEDIUM-1 (HTTP error body lost)**: Replaced `GetFromJsonAsync` with `GetAsync` + explicit `IsSuccessStatusCode` guard + `ReadAsStringAsync` on failure + `ReadFromJsonAsync` on success. Error body is now logged and surfaced, matching the `PushAsync` pattern.
+- **MEDIUM-2 (wrong baseline test count in story)**: Corrected Task 8.7 — updated "35 existing" to "31 existing" (actual baseline) and "~40 total" to "36 total".
+- **LOW-1 (response.Total vs Measurements.Count)**: Changed the "all already present" log message to use `response.Measurements.Count` consistently.
+
 ### File List
+
+- `ServerService/Models/Sync/MeasurementPullDto.cs` — **CREATED**
+- `ServerService/Controllers/SyncMeasurementsController.cs` — **MODIFIED** (added `Pull` endpoint + `using Microsoft.EntityFrameworkCore`)
+- `ClientService/Models/Sync/MeasurementPullDto.cs` — **CREATED**
+- `ClientService/Services/MeasurementSyncService.cs` — **MODIFIED** (added `IOptions<SyncOptions>` ctor param, `_batchSize` field, `PullAsync()` method, `MeasurementPullResult` record, 3 new usings)
+- `ClientService/Controllers/MeasurementsController.cs` — **MODIFIED** (added `[HttpPost("pull")]` action)
+- `ClientService/Views/Home/Index.cshtml` — **MODIFIED** (added Pull Measurements button + JS function)
+- `MicroservicesSync.Tests/Measurements/MeasurementPullTests.cs` — **CREATED** (+ **MODIFIED** in code review: added rollback test)
+- `MicroservicesSync.Tests/Measurements/MeasurementPushTests.cs` — **MODIFIED** (updated `Push_NoPendingMeasurements_ReturnsZeroCount` to pass new `IOptions<SyncOptions>` constructor param)

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ServerService.Models.Sync;
 using Sync.Application.Options;
@@ -80,5 +81,31 @@ public class SyncMeasurementsController : ControllerBase
                 "SyncMeasurementsController: push failed — transaction rolled back.");
             return StatusCode(500, new { message = "Push failed. Transaction rolled back.", error = ex.Message });
         }
+    }
+
+    [HttpGet("measurements/pull")]
+    public async Task<IActionResult> Pull(CancellationToken cancellationToken)
+    {
+        var measurements = await _db.Measurements
+            .AsNoTracking()
+            .Select(m => new MeasurementPullItemDto
+            {
+                Id = m.Id,
+                Value = m.Value,
+                RecordedAt = m.RecordedAt,
+                UserId = m.UserId,
+                CellId = m.CellId
+            })
+            .ToListAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "SyncMeasurementsController: pull requested — returning {Count} measurements.",
+            measurements.Count);
+
+        return Ok(new MeasurementPullResponse
+        {
+            Measurements = measurements,
+            Total = measurements.Count
+        });
     }
 }

@@ -1,5 +1,8 @@
 using ClientService.Models.Sync;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Sync.Application.Options;
+using Sync.Domain.Entities;
 using Sync.Infrastructure.Data;
 using System.Net.Http.Json;
 
@@ -13,15 +16,21 @@ public class MeasurementSyncService
 {
     private readonly ClientDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly int _batchSize;
     private readonly ILogger<MeasurementSyncService> _logger;
 
     public MeasurementSyncService(
         ClientDbContext db,
         IHttpClientFactory httpClientFactory,
+        IOptions<SyncOptions> syncOptions,
         ILogger<MeasurementSyncService> logger)
     {
         _db = db;
         _httpClientFactory = httpClientFactory;
+        _batchSize = syncOptions.Value.BatchSize;
+        if (_batchSize <= 0)
+            throw new ArgumentOutOfRangeException(nameof(syncOptions),
+                $"SyncOptions.BatchSize must be > 0 (was {_batchSize}).");
         _logger = logger;
     }
 
@@ -87,6 +96,97 @@ public class MeasurementSyncService
         return new MeasurementPushResult(pending.Count,
             $"Pushed {pending.Count} measurements to ServerService.");
     }
+
+    public async Task<MeasurementPullResult> PullAsync(CancellationToken cancellationToken = default)
+    {
+        // Step 1: GET consolidated measurement list from ServerService.
+        var http = _httpClientFactory.CreateClient("ServerService");
+        var httpResponse = await http.GetAsync("api/v1/sync/measurements/pull", cancellationToken);
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            var errorBody = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError(
+                "MeasurementSyncService: ServerService rejected pull (HTTP {Status}): {Body}",
+                (int)httpResponse.StatusCode, errorBody);
+            throw new InvalidOperationException(
+                $"ServerService rejected pull (HTTP {(int)httpResponse.StatusCode}): {errorBody}");
+        }
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<ClientMeasurementPullResponse>(cancellationToken);
+
+        if (response == null || response.Measurements.Count == 0)
+        {
+            _logger.LogInformation("MeasurementSyncService: pull returned 0 measurements from ServerService.");
+            return new MeasurementPullResult(0, "No measurements available on ServerService.");
+        }
+
+        // Step 2: Open transaction first, then identify new IDs to eliminate TOCTOU race between
+        // the existence check and the subsequent inserts.
+        var serverIds = response.Measurements.Select(m => m.Id).ToHashSet();
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var existingIds = (await _db.Measurements
+                    .AsNoTracking()
+                    .Where(m => serverIds.Contains(m.Id))
+                    .Select(m => m.Id)
+                    .ToListAsync(cancellationToken))
+                .ToHashSet();
+
+            var newMeasurements = response.Measurements
+                .Where(dto => !existingIds.Contains(dto.Id))
+                .ToList();
+
+            if (newMeasurements.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                _logger.LogInformation(
+                    "MeasurementSyncService: all {Count} server measurements already present locally.",
+                    response.Measurements.Count);
+                return new MeasurementPullResult(0, "All measurements already present locally — no changes needed.");
+            }
+
+            // Step 3: Partition into in-memory batches; ALL applied in the single open transaction.
+            var batches = newMeasurements
+                .Select((m, i) => new { m, i })
+                .GroupBy(x => x.i / _batchSize)
+                .Select(g => g.Select(x => x.m).ToList())
+                .ToList();
+
+            foreach (var batch in batches)
+            {
+                var entities = batch.Select(dto => new Measurement
+                {
+                    Id = dto.Id,
+                    Value = dto.Value,
+                    RecordedAt = dto.RecordedAt,
+                    SyncedAt = null, // Pulled measurements: SyncedAt=null (not pushed BY this client)
+                    UserId = dto.UserId,
+                    CellId = dto.CellId
+                }).ToList();
+
+                await _db.Measurements.AddRangeAsync(entities, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            _logger.LogInformation(
+                "MeasurementSyncService: pulled and applied {Count} new measurements in {Batches} batch(es).",
+                newMeasurements.Count, batches.Count);
+            return new MeasurementPullResult(newMeasurements.Count,
+                $"Pulled {newMeasurements.Count} new measurements from ServerService in {batches.Count} batch(es).");
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            _logger.LogError(ex,
+                "MeasurementSyncService: pull failed — local transaction rolled back.");
+            throw new InvalidOperationException(
+                $"Pull failed — local transaction rolled back: {ex.Message}", ex);
+        }
+    }
 }
 
 public record MeasurementPushResult(int Count, string Message);
+public record MeasurementPullResult(int Count, string Message);

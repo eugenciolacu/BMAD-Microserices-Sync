@@ -47,6 +47,16 @@
         <button id="btnPush" onclick="pushMeasurements()" class="btn btn-success">Push Measurements</button>
         <div id="pushResult" class="mt-2"></div>
     </div>
+
+    <div class="mb-3">
+        <h4>Pull Consolidated Measurements from ServerService</h4>
+        <p>Retrieves the full measurement set from ServerService and applies any new (missing) measurements
+           to this client's local database in batched, transactional form. Either all new measurements
+           are applied or none (on error).</p>
+        <p><em>Prerequisites: at least one push must have been completed (by any client) before pulling.</em></p>
+        <button id="btnPullMeasurements" onclick="pullMeasurements()" class="btn btn-info">Pull Measurements</button>
+        <div id="pullMeasurementsResult" class="mt-2"></div>
+    </div>
 </div>
 
 <script>
@@ -157,5 +167,32 @@
                 box.appendChild(el);
             })
             .finally(() => { document.getElementById('btnPush').disabled = false; });
+    }
+
+    function pullMeasurements() {
+        document.getElementById('btnPullMeasurements').disabled = true;
+        fetch('/api/v1/measurements/pull', { method: 'POST' })
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.message || 'Request failed (' + r.status + ')');
+                return data;
+            })
+            .then(data => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-success mt-2';
+                el.textContent = data.message;
+                const box = document.getElementById('pullMeasurementsResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Pull failed: ' + (err.message || err);
+                const box = document.getElementById('pullMeasurementsResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnPullMeasurements').disabled = false; });
     }
 </script>
