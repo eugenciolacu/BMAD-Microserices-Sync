@@ -78,8 +78,8 @@ development_status:
   # investigate unexpected behavior or edge cases.
   # FRs covered: FR10, FR11, FR12
   # ─────────────────────────────────────────────────────────────────────────────
-  epic-3: backlog
-  3-1-server-side-sync-run-summary-view: backlog
+  epic-3: in-progress
+  3-1-server-side-sync-run-summary-view: ready-for-dev
   3-2-measurement-inspection-via-jqgrid-on-both-services: backlog
   3-3-direct-database-inspection-support-for-diagnostics: backlog
   3-4-application-logging-for-sync-operations: backlog
