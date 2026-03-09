@@ -57,6 +57,14 @@
         <button id="btnPullMeasurements" onclick="pullMeasurements()" class="btn btn-info">Pull Measurements</button>
         <div id="pullMeasurementsResult" class="mt-2"></div>
     </div>
+
+    <div class="mb-3">
+        <h4>Verify Convergence</h4>
+        <p>Checks whether this client's local measurement count matches ServerService's total count.
+           Run after a completed pull to confirm convergence.</p>
+        <button id="btnVerifyConvergence" onclick="verifyConvergence()" class="btn btn-secondary">Verify Convergence</button>
+        <div id="verifyConvergenceResult" class="mt-2"></div>
+    </div>
 </div>
 
 <script>
@@ -194,5 +202,45 @@
                 box.appendChild(el);
             })
             .finally(() => { document.getElementById('btnPullMeasurements').disabled = false; });
+    }
+
+    function verifyConvergence() {
+        document.getElementById('btnVerifyConvergence').disabled = true;
+        const localFetch = fetch('/api/v1/measurements/count').then(async r => {
+            if (!r.ok) throw new Error('Local count failed (' + r.status + ')');
+            return r.json();
+        });
+        const serverFetch = fetch('/api/v1/measurements/server-count').then(async r => {
+            if (!r.ok) throw new Error('Server count failed (' + r.status + ')');
+            return r.json();
+        });
+        Promise.all([localFetch, serverFetch])
+            .then(([localData, serverData]) => {
+                const localCount = localData.count;
+                const serverCount = serverData.count;
+                const el = document.createElement('div');
+                if (localCount === 0 && serverCount === 0) {
+                    el.className = 'alert alert-secondary mt-2';
+                    el.textContent = 'No data yet: both client and server have 0 measurements. Run the scenario first.';
+                } else {
+                    const matched = localCount === serverCount;
+                    el.className = matched ? 'alert alert-success mt-2' : 'alert alert-warning mt-2';
+                    el.textContent = matched
+                        ? `\u2713 Converged: this client has ${localCount} measurements, server has ${serverCount}.`
+                        : `\u26a0 Not yet converged: this client has ${localCount} measurements, server has ${serverCount}. Run Pull Measurements first.`;
+                }
+                const box = document.getElementById('verifyConvergenceResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .catch(err => {
+                const el = document.createElement('div');
+                el.className = 'alert alert-danger mt-2';
+                el.textContent = 'Verify failed: ' + (err.message || err);
+                const box = document.getElementById('verifyConvergenceResult');
+                box.innerHTML = '';
+                box.appendChild(el);
+            })
+            .finally(() => { document.getElementById('btnVerifyConvergence').disabled = false; });
     }
 </script>

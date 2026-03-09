@@ -67,7 +67,7 @@ development_status:
   2-1-client-side-measurement-generation-per-instance: done
   2-2-transactional-batched-server-side-measurement-push: done
   2-3-transactional-batched-client-side-pull-of-consolidated-measurements: done
-  2-4-edge-case-multi-client-scenario-variant-with-batching: ready-for-dev
+  2-4-edge-case-multi-client-scenario-variant-with-batching: done
   2-5-repeatable-transactional-sync-runs-from-clean-baseline: backlog
   epic-2-retrospective: optional
 

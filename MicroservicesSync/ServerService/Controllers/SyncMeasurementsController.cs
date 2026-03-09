@@ -83,6 +83,17 @@ public class SyncMeasurementsController : ControllerBase
         }
     }
 
+    [HttpGet("measurements/count")]
+    public async Task<IActionResult> Count(CancellationToken cancellationToken)
+    {
+        var count = await _db.Measurements
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
+        _logger.LogInformation(
+            "SyncMeasurementsController: count requested — {Count} measurements.", count);
+        return Ok(new { count });
+    }
+
     [HttpGet("measurements/pull")]
     public async Task<IActionResult> Pull(CancellationToken cancellationToken)
     {

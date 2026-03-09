@@ -1,5 +1,7 @@
 using ClientService.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sync.Infrastructure.Data;
 
 namespace ClientService.Controllers;
 
@@ -7,18 +9,54 @@ namespace ClientService.Controllers;
 [Route("api/v1/measurements")]
 public class MeasurementsController : ControllerBase
 {
+    private readonly ClientDbContext _db;
     private readonly MeasurementGenerationService _generationService;
     private readonly MeasurementSyncService _syncService;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<MeasurementsController> _logger;
 
     public MeasurementsController(
+        ClientDbContext db,
         MeasurementGenerationService generationService,
         MeasurementSyncService syncService,
+        IHttpClientFactory httpClientFactory,
         ILogger<MeasurementsController> logger)
     {
+        _db = db;
         _generationService = generationService;
         _syncService = syncService;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
+    }
+
+    [HttpGet("count")]
+    public async Task<IActionResult> Count(CancellationToken cancellationToken)
+    {
+        var count = await _db.Measurements
+            .AsNoTracking()
+            .CountAsync(cancellationToken);
+        _logger.LogInformation(
+            "MeasurementsController: count requested — {Count} measurements.", count);
+        return Ok(new { count });
+    }
+
+    [HttpGet("server-count")]
+    public async Task<IActionResult> ServerCount(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var http = _httpClientFactory.CreateClient("ServerService");
+            using var response = await http.GetAsync("api/v1/sync/measurements/count", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode, new { message = "Failed to reach ServerService count endpoint." });
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            return Content(content, "application/json");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ClientService: server-count proxy call failed.");
+            return StatusCode(500, new { message = "Failed to reach ServerService.", error = ex.Message });
+        }
     }
 
     [HttpPost("generate")]
