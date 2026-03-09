@@ -56,6 +56,42 @@
     <p>No 500 errors should appear in any client or server logs. All batches should commit cleanly.</p>
 </div>
 
+<div class="mt-4">
+    <section>
+        <h3>Full Scenario Cycle — Repeatable Runs</h3>
+        <p>
+            Run the complete standard scenario (<strong>5 clients × 10 measurements</strong>) from a clean baseline,
+            repeating as many times as needed to build confidence in reliability and repeatability.
+            Each iteration uses the default <code>SyncOptions__MeasurementsPerClient=10</code> and
+            <code>SyncOptions__BatchSize=5</code> configuration already in <code>docker-compose.yml</code>.
+        </p>
+
+        <h5>Steps for One Complete Cycle</h5>
+        <ol>
+            <li>Click <strong>Reset to Baseline</strong> on this ServerService page. <em>(Clears all Measurements; re-seeds reference data — 0 measurements.)</em></li>
+            <li>On each of the 5 ClientService UIs: click <strong>Reset Client DB</strong>. <em>(Clears SQLite database. No ref data yet.)</em></li>
+            <li>On each of the 5 ClientService UIs: click <strong>Pull Reference Data</strong> in the Administration section. <em>(Re-seeds Buildings, Rooms, Surfaces, Cells, Users from ServerService.)</em></li>
+            <li>On each of the 5 ClientService UIs: click <strong>Generate Measurements</strong>. <em>(Creates 10 new measurements per client with fresh GUIDs — no conflict with previous runs.)</em></li>
+            <li>On each of the 5 ClientService UIs: click <strong>Push Measurements</strong>. <em>(Sends all local measurements to ServerService in batches of 5, inside a single transaction.)</em></li>
+            <li>Verify the Measurements grid on this ServerService page shows <strong>50 records</strong> (5 clients × 10 each).</li>
+            <li>On each of the 5 ClientService UIs: click <strong>Pull Measurements</strong>. <em>(Pulls all 50 measurements from ServerService into each client in batches of 5, inside a single transaction.)</em></li>
+            <li>On each of the 5 ClientService UIs: click <strong>Verify Convergence</strong>. <em>(Each client should report 50 local measurements matching the server's 50.)</em></li>
+            <li>To repeat: return to Step 1. Every new Generate creates unique GUIDs so no ID conflicts occur across runs.</li>
+        </ol>
+
+        <p>
+            <strong>Why repeats are clean:</strong> Each run generates measurements with new GUIDs (<code>Guid.NewGuid()</code>),
+            so repeated cycles from a fresh reset never produce duplicate IDs. The transactional push and pull ensure
+            all-or-nothing semantics — partial failures leave no residue.
+        </p>
+
+        <p>
+            <strong>Edge-case repeat note:</strong> For the 3-client edge-case variant (see the section above), the same
+            cycle applies — only reset, generate, push, and pull on clients 1–3. Clients 4 and 5 remain untouched.
+        </p>
+    </section>
+</div>
+
 <script>
     function resetServer() {
         if (!confirm('Are you sure? This will delete all measurements and re-seed reference data.')) return;

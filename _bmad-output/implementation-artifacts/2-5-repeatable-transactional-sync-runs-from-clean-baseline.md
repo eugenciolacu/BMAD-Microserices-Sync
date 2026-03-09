@@ -1,6 +1,6 @@
 # Story 2.5: Repeatable Transactional Sync Runs from Clean Baseline
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,10 +24,10 @@ so that I can build confidence in reliability and repeatability for larger effec
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add "Full Scenario Cycle (Repeatable Runs)" documentation to ServerService home page** (AC: #1, #2, #3)
-  - [ ] 1.1 Open `ServerService/Views/Home/Index.cshtml`.
-  - [ ] 1.2 Add a "Full Scenario Cycle — Repeatable Runs" section **after** the existing "Edge-Case Scenario: 3-Client Reduced-Volume Batching" section. Use a `<section>` element with an `<h3>` heading. Use a numbered `<ol>` list for the steps.
-  - [ ] 1.3 The section must document the complete cycle for the **standard scenario (5 clients × 10 measurements)**:
+- [x] **Task 1: Add "Full Scenario Cycle (Repeatable Runs)" documentation to ServerService home page** (AC: #1, #2, #3)
+  - [x] 1.1 Open `ServerService/Views/Home/Index.cshtml`.
+  - [x] 1.2 Add a "Full Scenario Cycle — Repeatable Runs" section **after** the existing "Edge-Case Scenario: 3-Client Reduced-Volume Batching" section. Use a `<section>` element with an `<h3>` heading. Use a numbered `<ol>` list for the steps.
+  - [x] 1.3 The section must document the complete cycle for the **standard scenario (5 clients × 10 measurements)**:
     1. Click "Reset" on this ServerService page. *(Clears all Measurements; re-seeds reference data, 0 measurements.)*
     2. On each of the 5 ClientService UIs: click "Reset Client DB". *(Clears SQLite database. No ref data yet.)*
     3. On each of the 5 ClientService UIs: click "Pull Reference Data" in the Administration section. *(Re-seeds Buildings, Rooms, Surfaces, Cells, Users from ServerService.)*
@@ -37,18 +37,18 @@ so that I can build confidence in reliability and repeatability for larger effec
     7. On each of the 5 ClientService UIs: click "Pull Measurements". *(Pull all 50 measurements from ServerService into each client in batches of 5, inside a single transaction.)*
     8. On each of the 5 ClientService UIs: click "Verify Convergence". *(Each client should report 50 local measurements matching server's 50.)*
     9. To repeat: return to Step 1. Every new Generate creates unique GUIDs so no ID conflicts occur across runs.
-  - [ ] 1.4 Below the ordered list, add a `<p>` note explaining why repeats are clean: *"Each run generates measurements with new GUIDs (Guid.NewGuid()), so repeated cycles from a fresh reset never produce duplicate IDs. The transactional push and pull ensure all-or-nothing semantics — partial failures leave no residue."*
-  - [ ] 1.5 Add an **edge-case repeat note** (short paragraph or `<ul>` bullet): for the 3-client edge-case variant (from the section above), the same cycle applies but only reset/generate/push/pull clients 1–3.
+  - [x] 1.4 Below the ordered list, add a `<p>` note explaining why repeats are clean: *"Each run generates measurements with new GUIDs (Guid.NewGuid()), so repeated cycles from a fresh reset never produce duplicate IDs. The transactional push and pull ensure all-or-nothing semantics — partial failures leave no residue."*
+  - [x] 1.5 Add an **edge-case repeat note** (short paragraph or `<ul>` bullet): for the 3-client edge-case variant (from the section above), the same cycle applies but only reset/generate/push/pull clients 1–3.
 
-- [ ] **Task 2: Write integration tests proving multi-run repeatability** (AC: #1, #2)
-  - [ ] 2.1 Create `MicroservicesSync.Tests/Measurements/RepeatableSyncRunTests.cs`.
-  - [ ] 2.2 Use the same test infrastructure patterns established in `MeasurementPullTests.cs` and `MeasurementGenerationTests.cs`:
+- [x] **Task 2: Write integration tests proving multi-run repeatability** (AC: #1, #2)
+  - [x] 2.1 Create `MicroservicesSync.Tests/Measurements/RepeatableSyncRunTests.cs`.
+  - [x] 2.2 Use the same test infrastructure patterns established in `MeasurementPullTests.cs` and `MeasurementGenerationTests.cs`:
     - Declare a local `internal sealed class TestableServerDbContextForRepeatable` using the same `IsRowVersion()` → `ValueGeneratedNever()` override pattern.
     - Use in-memory SQLite (`SqliteConnection` kept open) for both server and client `DbContext` instances.
     - Implement `IDisposable` to close connections and dispose contexts.
     - Seed reference data via a `SeedReferenceDataAsync()` helper that creates User → Building → Room → Surface → Cell hierarchy, capturing `_seedUserId` and `_seedCellId` as instance fields.
     - Use `MsOptions.Create(new SyncOptions { MeasurementsPerClient = 3, BatchSize = 2 })` for compact, fast tests.
-  - [ ] 2.3 Test `FullCycle_RunTwice_BothRunsConverge`:
+  - [x] 2.3 Test `FullCycle_RunTwice_BothRunsConverge`:
     - **Setup**: Two runs simulated sequentially, resetting between them.
     - **Run 1**:
       - Generate 3 measurements via `MeasurementGenerationService.GenerateAsync()`.
@@ -63,21 +63,21 @@ so that I can build confidence in reliability and repeatability for larger effec
       - Push and pull (same mock pattern).
       - Assert local count = 3, server count = 3.
     - **Final assert**: No exceptions thrown across both runs; counts converge to 3 after each run.
-  - [ ] 2.4 Test `NewMeasurementsAfterReset_HaveFreshGuids`:
+  - [x] 2.4 Test `NewMeasurementsAfterReset_HaveFreshGuids`:
     - Generate 3 measurements; store their IDs.
     - Call `DatabaseResetter.ResetClientAsync(_clientDb)`, then re-seed reference data.
     - Generate 3 more measurements; store their IDs.
     - Assert that the two ID sets have **zero intersection** (`!set1.Overlaps(set2)`).
     - This proves GUIDs do not conflict across repeated runs, guaranteeing no duplicate-key errors on push/pull.
-  - [ ] 2.5 Test `PullAfterReset_AppliesAllNewMeasurements`:
+  - [x] 2.5 Test `PullAfterReset_AppliesAllNewMeasurements`:
     - Simulate a client that has already pulled measurements (pre-populated `_clientDb.Measurements` with 3 entries).
     - Call `DatabaseResetter.ResetClientAsync(_clientDb)`, then re-seed reference data.
     - Assert `_clientDb.Measurements` count = 0 after reset.
     - Pull 3 new measurements (from mock server response with new GUIDs).
     - Assert `_clientDb.Measurements` count = 3. No `DbUpdateException` thrown.
     - This validates that the TOCTOU guard in `PullAsync` (existing-ID check) does not incorrectly block fresh pulls after a reset.
-  - [ ] 2.6 Run `dotnet build MicrosericesSync.sln` — 0 errors, 0 warnings.
-  - [ ] 2.7 Run `dotnet test` — all existing 44 tests pass; new tests pass (target: 47 total, 44 + 3 new).
+  - [x] 2.6 Run `dotnet build MicrosericesSync.sln` — 0 errors, 0 warnings.
+  - [x] 2.7 Run `dotnet test` — all existing 44 tests pass; new tests pass (target: 47 total, 44 + 3 new).
 
 ## Dev Notes
 
@@ -197,6 +197,15 @@ Claude Sonnet 4.6
 
 ### Debug Log References
 
+- Run 1 of implementation: `FullCycle_RunTwice_BothRunsConverge` failed with `FOREIGN KEY constraint failed` (SQLite Error 19) because server-side measurement inserts used random client `_seedUserId`/`_seedCellId` GUIDs instead of the stable GUIDs seeded by `DatabaseSeeder` (used by `ResetServerAsync`). Fixed by introducing `ServerSeedUserId`/`ServerSeedCellId` static fields with the `DatabaseSeeder` stable values and calling `ResetServerAsync` at the start of Run 1 to ensure server reference data is present before inserting measurements.
+
 ### Completion Notes List
 
+- Task 1 complete: "Full Scenario Cycle — Repeatable Runs" section added to `ServerService/Views/Home/Index.cshtml` after the Edge-Case Scenario section, with `<section>` / `<h3>` / `<ol>` / explanation paragraph / edge-case repeat note.
+- Task 2 complete: `MicroservicesSync.Tests/Measurements/RepeatableSyncRunTests.cs` created with 3 tests: `FullCycle_RunTwice_BothRunsConverge`, `NewMeasurementsAfterReset_HaveFreshGuids`, `PullAfterReset_AppliesAllNewMeasurements`.
+- Build: 0 errors, 0 warnings.
+- Tests: 47 total — 44 existing pass, 3 new pass.
+
 ### File List
+- `MicroservicesSync/ServerService/Views/Home/Index.cshtml` — added "Full Scenario Cycle — Repeatable Runs" documentation section
+- `MicroservicesSync/MicroservicesSync.Tests/Measurements/RepeatableSyncRunTests.cs` — created with 3 repeatability tests (`FullCycle_RunTwice_BothRunsConverge`, `NewMeasurementsAfterReset_HaveFreshGuids`, `PullAfterReset_AppliesAllNewMeasurements`)
