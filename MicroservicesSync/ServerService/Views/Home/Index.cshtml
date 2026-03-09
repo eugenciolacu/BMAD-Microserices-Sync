@@ -8,6 +8,30 @@
 </div>
 
 <div class="mt-4">
+    <h2>Sync Run Summary</h2>
+    <p>Recent sync push and pull operations recorded by ServerService. Newest first. Auto-loads on page open.</p>
+
+    <div class="mb-2">
+        <label for="filterUserId">Filter by User:</label>
+        <select id="filterUserId" class="form-select form-select-sm d-inline-block w-auto">
+            <option value="">All Users</option>
+            <!-- Options populated by JavaScript on load -->
+        </select>
+        <label for="filterRunType" class="ms-2">Run Type:</label>
+        <select id="filterRunType" class="form-select form-select-sm d-inline-block w-auto">
+            <option value="">All</option>
+            <option value="push">Push</option>
+            <option value="pull">Pull</option>
+        </select>
+        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="loadSyncRuns()">Refresh</button>
+    </div>
+
+    <div id="syncRunsResult">
+        <p class="text-muted">Loading...</p>
+    </div>
+</div>
+
+<div class="mt-4">
     <h2>Administration</h2>
     <p>Reset the ServerService database to the clean baseline state (all measurements deleted, reference data re-seeded).</p>
     <button id="btnReset" class="btn btn-danger" onclick="resetServer()">Reset to Baseline</button>
@@ -120,4 +144,72 @@
             })
             .finally(() => { document.getElementById('btnReset').disabled = false; });
     }
+
+    function loadSyncRuns() {
+        const userId = document.getElementById('filterUserId').value;
+        const runType = document.getElementById('filterRunType').value;
+        let url = '/api/v1/sync-runs?limit=50';
+        if (userId) url += '&userId=' + encodeURIComponent(userId);
+        if (runType) url += '&runType=' + encodeURIComponent(runType);
+
+        fetch(url)
+            .then(r => {
+                if (!r.ok) throw new Error('Server error (' + r.status + ')');
+                return r.json();
+            })
+            .then(data => {
+                const runs = data.runs || [];
+                if (runs.length === 0) {
+                    document.getElementById('syncRunsResult').innerHTML =
+                        '<p class="text-muted">No sync runs recorded yet. Run a Push or Pull scenario first.</p>';
+                    return;
+                }
+                let html = '<table class="table table-sm table-striped table-bordered">'
+                    + '<thead><tr><th>Timestamp (UTC)</th><th>Type</th><th>User</th><th>Count</th><th>Status</th><th>Error</th></tr></thead><tbody>';
+                for (const r of runs) {
+                    const statusClass = r.status === 'success' ? 'text-success' : 'text-danger fw-bold';
+                    const error = r.errorMessage ? '<span class="text-danger">' + escapeHtml(r.errorMessage) + '</span>' : '';
+                    html += `<tr>
+                        <td>${escapeHtml(r.occurredAt)}</td>
+                        <td>${escapeHtml(r.runType)}</td>
+                        <td>${escapeHtml(r.username || r.userId)}</td>
+                        <td>${escapeHtml(String(r.measurementCount))}</td>
+                        <td class="${statusClass}">${escapeHtml(r.status)}</td>
+                        <td>${error}</td>
+                    </tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('syncRunsResult').innerHTML = html;
+
+                // Populate user filter dropdown from data (deduplicate)
+                const userSelect = document.getElementById('filterUserId');
+                const existingValues = Array.from(userSelect.options).map(o => o.value);
+                for (const r of runs) {
+                    if (r.userId && r.userId !== '00000000-0000-0000-0000-000000000000' && !existingValues.includes(r.userId)) {
+                        const opt = document.createElement('option');
+                        opt.value = r.userId;
+                        opt.textContent = r.username || r.userId;
+                        userSelect.appendChild(opt);
+                        existingValues.push(r.userId);
+                    }
+                }
+            })
+            .catch(err => {
+                document.getElementById('syncRunsResult').innerHTML =
+                    '<div class="alert alert-danger">Failed to load sync runs: ' + escapeHtml(err.message || String(err)) + '</div>';
+            });
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // Auto-load on page open
+    document.addEventListener('DOMContentLoaded', loadSyncRuns);
 </script>

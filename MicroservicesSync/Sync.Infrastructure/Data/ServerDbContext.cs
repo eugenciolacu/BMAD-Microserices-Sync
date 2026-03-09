@@ -20,6 +20,7 @@ public class ServerDbContext : DbContext
     public DbSet<Surface> Surfaces => Set<Surface>();
     public DbSet<Cell> Cells => Set<Cell>();
     public DbSet<Measurement> Measurements => Set<Measurement>();
+    public DbSet<SyncRun> SyncRuns => Set<SyncRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +33,7 @@ public class ServerDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SurfaceConfiguration());
         modelBuilder.ApplyConfiguration(new CellConfiguration());
         modelBuilder.ApplyConfiguration(new MeasurementConfiguration());
+        modelBuilder.ApplyConfiguration(new SyncRunConfiguration());
 
         // SQL Server-specific: configure RowVersion as a rowversion/timestamp column
         // for all entities that expose the byte[] RowVersion property.

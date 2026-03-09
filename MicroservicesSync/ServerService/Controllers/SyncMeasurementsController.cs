@@ -68,6 +68,29 @@ public class SyncMeasurementsController : ControllerBase
                 "SyncMeasurementsController: pushed {Count} measurements in {Batches} batch(es).",
                 request.Measurements.Count, batches.Count);
 
+            // Record sync run summary (best-effort; separate from measurement transaction).
+            // Wrapped in its own try/catch: if this insert fails the measurements are already
+            // committed — we must NOT rollback or return 500.
+            try
+            {
+                var syncRun = new Sync.Domain.Entities.SyncRun
+                {
+                    Id = Guid.NewGuid(),
+                    OccurredAt = DateTime.UtcNow,
+                    RunType = "push",
+                    UserId = request.Measurements.First().UserId,
+                    MeasurementCount = request.Measurements.Count,
+                    Status = "success"
+                };
+                _db.SyncRuns.Add(syncRun);
+                await _db.SaveChangesAsync(CancellationToken.None);
+            }
+            catch (Exception syncEx)
+            {
+                _logger.LogWarning(syncEx,
+                    "SyncMeasurementsController: failed to record push SyncRun — measurements were committed.");
+            }
+
             return Ok(new MeasurementPushResponse
             {
                 Pushed = request.Measurements.Count,
@@ -79,6 +102,25 @@ public class SyncMeasurementsController : ControllerBase
             await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(ex,
                 "SyncMeasurementsController: push failed — transaction rolled back.");
+
+            // Record failed sync run (best-effort; swallow exceptions)
+            try
+            {
+                var failedRun = new Sync.Domain.Entities.SyncRun
+                {
+                    Id = Guid.NewGuid(),
+                    OccurredAt = DateTime.UtcNow,
+                    RunType = "push",
+                    UserId = request.Measurements.FirstOrDefault()?.UserId,
+                    MeasurementCount = 0,
+                    Status = "failed",
+                    ErrorMessage = ex.Message.Length > 1000 ? ex.Message[..1000] : ex.Message
+                };
+                _db.SyncRuns.Add(failedRun);
+                await _db.SaveChangesAsync(CancellationToken.None);
+            }
+            catch { /* best-effort; do not mask the original error */ }
+
             return StatusCode(500, new { message = "Push failed. Transaction rolled back.", error = ex.Message });
         }
     }
@@ -97,26 +139,72 @@ public class SyncMeasurementsController : ControllerBase
     [HttpGet("measurements/pull")]
     public async Task<IActionResult> Pull(CancellationToken cancellationToken)
     {
-        var measurements = await _db.Measurements
-            .AsNoTracking()
-            .Select(m => new MeasurementPullItemDto
-            {
-                Id = m.Id,
-                Value = m.Value,
-                RecordedAt = m.RecordedAt,
-                UserId = m.UserId,
-                CellId = m.CellId
-            })
-            .ToListAsync(cancellationToken);
-
-        _logger.LogInformation(
-            "SyncMeasurementsController: pull requested — returning {Count} measurements.",
-            measurements.Count);
-
-        return Ok(new MeasurementPullResponse
+        try
         {
-            Measurements = measurements,
-            Total = measurements.Count
-        });
+            var measurements = await _db.Measurements
+                .AsNoTracking()
+                .Select(m => new MeasurementPullItemDto
+                {
+                    Id = m.Id,
+                    Value = m.Value,
+                    RecordedAt = m.RecordedAt,
+                    UserId = m.UserId,
+                    CellId = m.CellId
+                })
+                .ToListAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "SyncMeasurementsController: pull requested — returning {Count} measurements.",
+                measurements.Count);
+
+            // Record pull run summary (best-effort; use CancellationToken.None so a client
+            // disconnect after data is fetched cannot cancel this record and cause a false failure).
+            try
+            {
+                var syncRun = new Sync.Domain.Entities.SyncRun
+                {
+                    Id = Guid.NewGuid(),
+                    OccurredAt = DateTime.UtcNow,
+                    RunType = "pull",
+                    UserId = null,
+                    MeasurementCount = measurements.Count,
+                    Status = "success"
+                };
+                _db.SyncRuns.Add(syncRun);
+                await _db.SaveChangesAsync(CancellationToken.None);
+            }
+            catch (Exception syncEx)
+            {
+                _logger.LogWarning(syncEx,
+                    "SyncMeasurementsController: failed to record pull SyncRun — measurements were returned.");
+            }
+
+            return Ok(new MeasurementPullResponse
+            {
+                Measurements = measurements,
+                Total = measurements.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "SyncMeasurementsController: pull failed.");
+            try
+            {
+                var failedRun = new Sync.Domain.Entities.SyncRun
+                {
+                    Id = Guid.NewGuid(),
+                    OccurredAt = DateTime.UtcNow,
+                    RunType = "pull",
+                    UserId = null,
+                    MeasurementCount = 0,
+                    Status = "failed",
+                    ErrorMessage = ex.Message.Length > 1000 ? ex.Message[..1000] : ex.Message
+                };
+                _db.SyncRuns.Add(failedRun);
+                await _db.SaveChangesAsync(CancellationToken.None);
+            }
+            catch { /* best-effort */ }
+            return StatusCode(500, new { message = "Pull failed.", error = ex.Message });
+        }
     }
 }
