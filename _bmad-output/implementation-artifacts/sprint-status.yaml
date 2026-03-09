@@ -69,7 +69,7 @@ development_status:
   2-3-transactional-batched-client-side-pull-of-consolidated-measurements: done
   2-4-edge-case-multi-client-scenario-variant-with-batching: done
   2-5-repeatable-transactional-sync-runs-from-clean-baseline: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Epic 3: Sync Diagnostics and Audit
