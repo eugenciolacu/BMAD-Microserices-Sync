@@ -4,6 +4,12 @@ using Sync.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 

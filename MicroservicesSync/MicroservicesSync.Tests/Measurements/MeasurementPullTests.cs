@@ -1,4 +1,5 @@
 using ClientService.Models.Sync;
+using ClientService.Options;
 using ClientService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
@@ -103,6 +104,7 @@ public class MeasurementPullTests : IDisposable
             _clientDb,
             httpClientFactory ?? new StubHttpClientFactoryThrowing(),
             MsOptions.Create(new SyncOptions { BatchSize = batchSize }),
+            MsOptions.Create(new ClientIdentityOptions { UserId = new Guid("00000000-0000-0000-0000-000000000001") }),
             NullLogger<MeasurementSyncService>.Instance);
 
     private async Task SeedServerReferenceDataAsync()

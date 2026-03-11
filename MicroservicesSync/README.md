@@ -238,3 +238,55 @@ SELECT COUNT(*) FROM Cells;      -- expected: 16
 > **Note on `SyncedAt`:** In the ClientService `Measurements` table, `SyncedAt` is set to a UTC timestamp when a measurement was successfully **pushed** to ServerService by this client. A NULL value means either (a) the measurement was generated locally but not yet pushed, or (b) the measurement was **pulled** from another client — pulled measurements always arrive with `SyncedAt = null`.
 
 > **Note on `ConcurrencyStamp`:** Tables include a `ConcurrencyStamp` (integer) column used as a concurrency token. Safe to ignore during inspection.
+
+> For log-based diagnostics, see the **Viewing Sync Logs** section below.
+
+## Viewing Sync Logs
+
+Sync operations on both ServerService and ClientService emit structured log entries that include a **correlation ID**, user identity, operation type, measurement count, and success/failure status.
+
+**Viewing logs via docker logs:**
+
+```powershell
+# ServerService logs (most recent 50 lines)
+docker logs serverservice-app --tail 50
+
+# ClientService User 1 logs
+docker logs clientservice-app-user1 --tail 50
+
+# Filter logs by timestamp range
+docker logs serverservice-app --since "2026-03-11T10:00:00" --until "2026-03-11T11:00:00"
+```
+
+**Filtering by correlation ID or SyncRunId:**
+
+Each sync operation generates a unique ID. On ServerService, it is the `SyncRunId` (matches the `Id` column in the `SyncRuns` table). On ClientService, it is a `CorrelationId` passed to the server as an `X-Correlation-Id` HTTP header.
+
+```powershell
+# Find all log entries for a specific ServerService SyncRunId
+docker logs serverservice-app 2>&1 | Select-String "SyncRunId: <paste-id-here>"
+
+# Find all log entries for a specific ClientService CorrelationId
+docker logs clientservice-app-user1 2>&1 | Select-String "CorrelationId: <paste-id-here>"
+
+# Trace a client operation end-to-end (client + server logs)
+docker logs clientservice-app-user1 2>&1 | Select-String "<correlation-id>"
+docker logs serverservice-app 2>&1 | Select-String "<correlation-id>"
+```
+
+**Log entry fields for sync operations:**
+
+| Field | Description | Service |
+|---|---|---|
+| SyncRunId | Unique ID for a sync run on ServerService (matches `SyncRuns.Id` in SQL Server) | ServerService |
+| CorrelationId | Unique ID for a sync operation on ClientService (passed as `X-Correlation-Id` header) | ClientService |
+| RunType | `push` or `pull` | Both |
+| UserId | GUID of the user/client performing the operation | Both |
+| ClientCorrelationId | The client's CorrelationId as received by ServerService (via HTTP header) | ServerService |
+
+**Diagnosing a failed sync operation:**
+
+1. Check the Sync Run Summary view on ServerService home page — failed runs show error status.
+2. Note the `SyncRunId` from the summary view (it is the `Id` column).
+3. Use `docker logs serverservice-app 2>&1 | Select-String "<SyncRunId>"` to find server-side details.
+4. If the failure originated from a ClientService push/pull, check the client's logs for the corresponding `CorrelationId` and the `X-Correlation-Id` in the server logs.

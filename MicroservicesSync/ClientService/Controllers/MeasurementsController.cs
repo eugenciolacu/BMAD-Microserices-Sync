@@ -85,17 +85,17 @@ public class MeasurementsController : ControllerBase
         try
         {
             var result = await _syncService.PushAsync(cancellationToken);
-            _logger.LogInformation("ClientService: push completed — {Count} measurements.", result.Count);
+            _logger.LogInformation("MeasurementsController: push completed — {Count} measurements.", result.Count);
             return Ok(new { message = result.Message, pushed = result.Count });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "ClientService: push failed — server rejected.");
+            _logger.LogWarning(ex, "MeasurementsController: push failed — server rejected: {Message}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ClientService: push failed unexpectedly.");
+            _logger.LogError(ex, "MeasurementsController: push failed unexpectedly: {Message}", ex.Message);
             return StatusCode(500, new { message = "Push failed.", error = ex.Message });
         }
     }
@@ -106,17 +106,17 @@ public class MeasurementsController : ControllerBase
         try
         {
             var result = await _syncService.PullAsync(cancellationToken);
-            _logger.LogInformation("ClientService: pull completed — {Count} new measurements.", result.Count);
+            _logger.LogInformation("MeasurementsController: pull completed — {Count} new measurements.", result.Count);
             return Ok(new { message = result.Message, pulled = result.Count });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "ClientService: pull failed — operation error.");
+            _logger.LogWarning(ex, "MeasurementsController: pull failed — server rejected: {Message}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ClientService: pull failed unexpectedly.");
+            _logger.LogError(ex, "MeasurementsController: pull failed unexpectedly: {Message}", ex.Message);
             return StatusCode(500, new { message = "Pull failed.", error = ex.Message });
         }
     }

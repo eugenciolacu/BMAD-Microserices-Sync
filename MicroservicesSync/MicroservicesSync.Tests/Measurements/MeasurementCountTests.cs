@@ -110,6 +110,7 @@ public class MeasurementCountTests : IDisposable
                 _clientDb,
                 new StubHttpClientFactoryThrowing(),
                 MsOptions.Create(new SyncOptions { BatchSize = 5 }),
+                MsOptions.Create(new ClientIdentityOptions { UserId = new Guid("00000000-0000-0000-0000-000000000001") }),
                 NullLogger<MeasurementSyncService>.Instance),
             controllerFactory ?? new StubHttpClientFactoryThrowing(),
             NullLogger<ClientService.Controllers.MeasurementsController>.Instance);

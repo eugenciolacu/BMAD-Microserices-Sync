@@ -1,3 +1,4 @@
+using ClientService.Options;
 using ClientService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
@@ -174,6 +175,7 @@ public class MeasurementPushTests : IDisposable
             _clientDb,
             new StubHttpClientFactory(),
             MsOptions.Create(new SyncOptions { BatchSize = 3 }),
+            MsOptions.Create(new ClientIdentityOptions { UserId = new Guid("00000000-0000-0000-0000-000000000001") }),
             NullLogger<MeasurementSyncService>.Instance);
 
         var result = await syncService.PushAsync();

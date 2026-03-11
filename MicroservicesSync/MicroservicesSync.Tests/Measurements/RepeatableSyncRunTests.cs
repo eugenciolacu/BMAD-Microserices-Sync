@@ -106,6 +106,7 @@ public class RepeatableSyncRunTests : IDisposable
             _clientDb,
             httpClientFactory,
             MsOptions.Create(new SyncOptions { BatchSize = 2 }),
+            MsOptions.Create(new ClientIdentityOptions { UserId = _seedUserId }),
             NullLogger<MeasurementSyncService>.Instance);
 
     private async Task SeedReferenceDataAsync()

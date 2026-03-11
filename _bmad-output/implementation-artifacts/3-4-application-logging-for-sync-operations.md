@@ -1,6 +1,6 @@
 # Story 3.4: Application Logging for Sync Operations
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,8 +26,8 @@ so that I can trace what happened during a sync run and understand any failures.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Configure console logging with scope support on both services** (AC: #1, #3)
-  - [ ] 1.1 In `ServerService/Program.cs`, after the `var builder = ...` line, add simple console logging configuration that enables scope rendering:
+- [x] **Task 1: Configure console logging with scope support on both services** (AC: #1, #3)
+  - [x] 1.1 In `ServerService/Program.cs`, after the `var builder = ...` line, add simple console logging configuration that enables scope rendering:
     ```csharp
     builder.Logging.AddSimpleConsole(options =>
     {
@@ -35,7 +35,7 @@ so that I can trace what happened during a sync run and understand any failures.
         options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
     });
     ```
-  - [ ] 1.2 In `ClientService/Program.cs`, add the same simple console logging configuration after `var builder = ...`:
+  - [x] 1.2 In `ClientService/Program.cs`, add the same simple console logging configuration after `var builder = ...`:
     ```csharp
     builder.Logging.AddSimpleConsole(options =>
     {
@@ -43,12 +43,12 @@ so that I can trace what happened during a sync run and understand any failures.
         options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
     });
     ```
-  - [ ] 1.3 Verify in `appsettings.json` (both services) that the existing `"Default": "Information"` log level is preserved — do NOT change existing log level settings.
-  - [ ] 1.4 **No new NuGet packages required.** `AddSimpleConsole` is part of `Microsoft.Extensions.Logging.Console` which is included by default in the ASP.NET Core framework. Do NOT add Serilog or any third-party logging library.
+  - [x] 1.3 Verify in `appsettings.json` (both services) that the existing `"Default": "Information"` log level is preserved — do NOT change existing log level settings.
+  - [x] 1.4 **No new NuGet packages required.** `AddSimpleConsole` is part of `Microsoft.Extensions.Logging.Console` which is included by default in the ASP.NET Core framework. Do NOT add Serilog or any third-party logging library.
 
-- [ ] **Task 2: Add correlation context to ServerService sync push/pull** (AC: #1, #2, #3)
-  - [ ] 2.1 Open `ServerService/Controllers/SyncMeasurementsController.cs`.
-  - [ ] 2.2 In the `Push` method, **pre-generate** the SyncRun ID at the top of the method and use it for both logging and the SyncRun record. Wrap the operation body in `ILogger.BeginScope()`:
+- [x] **Task 2: Add correlation context to ServerService sync push/pull** (AC: #1, #2, #3)
+  - [x] 2.1 Open `ServerService/Controllers/SyncMeasurementsController.cs`.
+  - [x] 2.2 In the `Push` method, **pre-generate** the SyncRun ID at the top of the method and use it for both logging and the SyncRun record. Wrap the operation body in `ILogger.BeginScope()`:
     ```csharp
     [HttpPost("measurements/push")]
     public async Task<IActionResult> Push(
@@ -72,10 +72,10 @@ so that I can trace what happened during a sync run and understand any failures.
         }
     }
     ```
-  - [ ] 2.3 Reuse the pre-generated `syncRunId` in both success and failure `SyncRun` entity creation — replace the existing `Id = Guid.NewGuid()` with `Id = syncRunId` in:
+  - [x] 2.3 Reuse the pre-generated `syncRunId` in both success and failure `SyncRun` entity creation — replace the existing `Id = Guid.NewGuid()` with `Id = syncRunId` in:
     - The success SyncRun record (inside the try block after commit)
     - The failure SyncRun record (inside the catch block after rollback)
-  - [ ] 2.4 In the `Pull` method, apply the same pattern. Pre-generate `syncRunId` at the top, read `X-Correlation-Id` header, wrap in `BeginScope`:
+  - [x] 2.4 In the `Pull` method, apply the same pattern. Pre-generate `syncRunId` at the top, read `X-Correlation-Id` header, wrap in `BeginScope`:
     ```csharp
     [HttpGet("measurements/pull")]
     public async Task<IActionResult> Pull(CancellationToken cancellationToken)
@@ -94,16 +94,16 @@ so that I can trace what happened during a sync run and understand any failures.
         }
     }
     ```
-  - [ ] 2.5 Update the existing log messages inside `Push` and `Pull` to include the `SyncRunId` explicitly in the message template (in addition to the scope). This ensures SyncRunId is visible even in non-scope-aware log viewers:
+  - [x] 2.5 Update the existing log messages inside `Push` and `Pull` to include the `SyncRunId` explicitly in the message template (in addition to the scope). This ensures SyncRunId is visible even in non-scope-aware log viewers:
     - Push success: `"SyncMeasurementsController: [{SyncRunId}] pushed {Count} measurements from user {UserId} in {Batches} batch(es)."`
     - Push failure: `"SyncMeasurementsController: [{SyncRunId}] push failed for user {UserId} — transaction rolled back."`
     - Pull success: `"SyncMeasurementsController: [{SyncRunId}] pull completed — returning {Count} measurements."`
     - Pull failure: `"SyncMeasurementsController: [{SyncRunId}] pull failed."`
-  - [ ] 2.6 Do NOT change the existing transaction logic, batching, SyncRun best-effort recording pattern, or HTTP response structure. The `BeginScope` wrapper and log message updates are the only changes to these methods.
+  - [x] 2.6 Do NOT change the existing transaction logic, batching, SyncRun best-effort recording pattern, or HTTP response structure. The `BeginScope` wrapper and log message updates are the only changes to these methods.
 
-- [ ] **Task 3: Add correlation context to ClientService sync operations** (AC: #1, #2, #3)
-  - [ ] 3.1 Open `ClientService/Services/MeasurementSyncService.cs`.
-  - [ ] 3.2 Inject `IOptions<ClientIdentityOptions>` into the `MeasurementSyncService` constructor (follow the same pattern used in `MeasurementGenerationService`):
+- [x] **Task 3: Add correlation context to ClientService sync operations** (AC: #1, #2, #3)
+  - [x] 3.1 Open `ClientService/Services/MeasurementSyncService.cs`.
+  - [x] 3.2 Inject `IOptions<ClientIdentityOptions>` into the `MeasurementSyncService` constructor (follow the same pattern used in `MeasurementGenerationService`):
     ```csharp
     private readonly Guid _userId;
 
@@ -125,7 +125,7 @@ so that I can trace what happened during a sync run and understand any failures.
     }
     ```
     Add the required `using ClientService.Options;` if not already present.
-  - [ ] 3.3 In `PushAsync`, generate a `correlationId` at the top and wrap the method body in `BeginScope`:
+  - [x] 3.3 In `PushAsync`, generate a `correlationId` at the top and wrap the method body in `BeginScope`:
     ```csharp
     public async Task<MeasurementPushResult> PushAsync(CancellationToken cancellationToken = default)
     {
@@ -141,12 +141,12 @@ so that I can trace what happened during a sync run and understand any failures.
         }
     }
     ```
-  - [ ] 3.4 In `PushAsync`, pass the correlation ID to ServerService via an HTTP header. After creating the HTTP client, add the header before sending the request:
+  - [x] 3.4 In `PushAsync`, pass the correlation ID to ServerService via an HTTP header. After creating the HTTP client, add the header before sending the request:
     ```csharp
     var http = _httpClientFactory.CreateClient("ServerService");
     http.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId.ToString());
     ```
-  - [ ] 3.5 In `PullAsync`, apply the same pattern with `BeginScope` and `X-Correlation-Id` header:
+  - [x] 3.5 In `PullAsync`, apply the same pattern with `BeginScope` and `X-Correlation-Id` header:
     ```csharp
     public async Task<MeasurementPullResult> PullAsync(CancellationToken cancellationToken = default)
     {
@@ -164,7 +164,7 @@ so that I can trace what happened during a sync run and understand any failures.
         }
     }
     ```
-  - [ ] 3.6 Update existing log messages in `PushAsync` and `PullAsync` to include CorrelationId explicitly in the message template:
+  - [x] 3.6 Update existing log messages in `PushAsync` and `PullAsync` to include CorrelationId explicitly in the message template:
     - Push no-op: `"MeasurementSyncService: [{CorrelationId}] no pending measurements to push for user {UserId}."`
     - Push HTTP error: `"MeasurementSyncService: [{CorrelationId}] ServerService rejected push (HTTP {Status}): {Body}"`
     - Push success: `"MeasurementSyncService: [{CorrelationId}] successfully pushed {Count} measurements for user {UserId}; SyncedAt updated."`
@@ -173,31 +173,31 @@ so that I can trace what happened during a sync run and understand any failures.
     - Pull all present: `"MeasurementSyncService: [{CorrelationId}] all {Count} server measurements already present locally."`
     - Pull success: `"MeasurementSyncService: [{CorrelationId}] pulled and applied {Count} new measurements in {Batches} batch(es)."`
     - Pull failure: `"MeasurementSyncService: [{CorrelationId}] pull failed — local transaction rolled back."`
-  - [ ] 3.7 Do NOT change the existing `MeasurementPushResult` and `MeasurementPullResult` records — they don't need the correlation ID.
+  - [x] 3.7 Do NOT change the existing `MeasurementPushResult` and `MeasurementPullResult` records — they don't need the correlation ID.
 
-- [ ] **Task 4: Add correlation context to ClientService MeasurementsController sync endpoints** (AC: #1, #2)
-  - [ ] 4.1 Open `ClientService/Controllers/MeasurementsController.cs`.
-  - [ ] 4.2 Update the `Push` and `Pull` action methods to log the completion with user identity. The `MeasurementsController` already injects `ILogger<MeasurementsController>`. The correlation ID is already attached as scope context from `MeasurementSyncService` — no additional `BeginScope` is needed here.
-  - [ ] 4.3 Enhance existing log messages in the `Push` action:
+- [x] **Task 4: Add correlation context to ClientService MeasurementsController sync endpoints** (AC: #1, #2)
+  - [x] 4.1 Open `ClientService/Controllers/MeasurementsController.cs`.
+  - [x] 4.2 Update the `Push` and `Pull` action methods to log the completion with user identity. The `MeasurementsController` already injects `ILogger<MeasurementsController>`. No additional `BeginScope` is needed here — the controller-level log lines do NOT carry correlation scope because `ILogger.BeginScope` uses `AsyncLocal` state that is disposed when `PushAsync`/`PullAsync` return. The full correlation context is captured in the service-layer logs; the controller logs serve as HTTP endpoint boundary markers only.
+  - [x] 4.3 Enhance existing log messages in the `Push` action:
     - Success: `"MeasurementsController: push completed — {Count} measurements."` (no change needed — this is sufficient with the scope context from downstream)
     - Warning: `"MeasurementsController: push failed — server rejected: {Message}"` — include the exception message
     - Error: `"MeasurementsController: push failed unexpectedly: {Message}"` — include the exception message
-  - [ ] 4.4 Enhance existing log messages in the `Pull` action:
+  - [x] 4.4 Enhance existing log messages in the `Pull` action:
     - Same pattern as Push — include exception message in Warning/Error level logs
-  - [ ] 4.5 Do NOT add `BeginScope` in the controller — the scope from `MeasurementSyncService` covers the sync-specific context. Adding a redundant scope here would create nested noise.
+  - [x] 4.5 Do NOT add `BeginScope` in the controller — the scope from `MeasurementSyncService` covers the sync-specific context. Adding a redundant scope here would create nested noise.
 
-- [ ] **Task 5: Update existing unit tests for new constructor** (AC: n/a — technical requirement)
-  - [ ] 5.1 Find all tests that construct `MeasurementSyncService` directly (search for `new MeasurementSyncService(` in `MicroservicesSync.Tests/`).
-  - [ ] 5.2 Update each test constructor call to include the new `IOptions<ClientIdentityOptions>` parameter. Use a test helper value:
+- [x] **Task 5: Update existing unit tests for new constructor** (AC: n/a — technical requirement)
+  - [x] 5.1 Find all tests that construct `MeasurementSyncService` directly (search for `new MeasurementSyncService(` in `MicroservicesSync.Tests/`).
+  - [x] 5.2 Update each test constructor call to include the new `IOptions<ClientIdentityOptions>` parameter. Use a test helper value:
     ```csharp
     MsOptions.Create(new ClientIdentityOptions { UserId = TestUserGuid })
     ```
     Where `TestUserGuid` is the existing test user GUID used in each test class (follow the pattern already established in `MeasurementGenerationTests.cs`).
-  - [ ] 5.3 Run `dotnet build MicrosericesSync.sln` — 0 errors.
-  - [ ] 5.4 Run all tests — all pass. Do NOT change test assertions or add new test methods. The constructor parameter update is the only test change needed.
+  - [x] 5.3 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 5.4 Run all tests — all pass. Do NOT change test assertions or add new test methods. The constructor parameter update is the only test change needed.
 
-- [ ] **Task 6: Update README with log access documentation** (AC: #1, #3)
-  - [ ] 6.1 In `MicroservicesSync/README.md`, add a new section **"Viewing Sync Logs"** after the existing "Direct Database Inspection" section. Section structure:
+- [x] **Task 6: Update README with log access documentation** (AC: #1, #3)
+  - [x] 6.1 In `MicroservicesSync/README.md`, add a new section **"Viewing Sync Logs"** after the existing "Direct Database Inspection" section. Section structure:
 
     **Viewing Sync Logs**
 
@@ -247,22 +247,22 @@ so that I can trace what happened during a sync run and understand any failures.
     3. Use `docker logs serverservice-app 2>&1 | Select-String "<SyncRunId>"` to find server-side details.
     4. If the failure originated from a ClientService push/pull, check the client's logs for the corresponding `CorrelationId` and the `X-Correlation-Id` in the server logs.
 
-  - [ ] 6.2 In the existing "Direct Database Inspection" section, add a cross-reference sentence at the end: "For log-based diagnostics, see the **Viewing Sync Logs** section below."
-  - [ ] 6.3 Do NOT modify any other README sections.
+  - [x] 6.2 In the existing "Direct Database Inspection" section, add a cross-reference sentence at the end: "For log-based diagnostics, see the **Viewing Sync Logs** section below."
+  - [x] 6.3 Do NOT modify any other README sections.
 
-- [ ] **Task 7: Docker smoke test** (AC: #1, #2, #3)
-  - [ ] 7.1 Start the environment: `docker-compose up` (from `MicroservicesSync/`).
-  - [ ] 7.2 Trigger a full sync flow: generate measurements → push → pull (use the ClientService UI buttons or curl).
-  - [ ] 7.3 Check ServerService logs: `docker logs serverservice-app --tail 30`. Verify:
+- [x] **Task 7: Docker smoke test** (AC: #1, #2, #3)
+  - [x] 7.1 Start the environment: `docker-compose up` (from `MicroservicesSync/`).
+  - [x] 7.2 Trigger a full sync flow: generate measurements → push → pull (use the ClientService UI buttons or curl).
+  - [x] 7.3 Check ServerService logs: `docker logs serverservice-app --tail 30`. Verify:
     - Log entries contain `SyncRunId:` prefix in the scope output
     - Push log shows user identity, measurement count, and "push" run type
     - Pull log shows measurement count and "pull" run type
     - `ClientCorrelationId` appears in server logs (from client's header)
-  - [ ] 7.4 Check ClientService logs: `docker logs clientservice-app-user1 --tail 30`. Verify:
+  - [x] 7.4 Check ClientService logs: `docker logs clientservice-app-user1 --tail 30`. Verify:
     - Log entries contain `CorrelationId:` in scope output
     - Push/pull logs include user identity and operation details
-  - [ ] 7.5 Verify filtering: Use `Select-String` to filter a specific SyncRunId and confirm only entries from that one run appear.
-  - [ ] 7.6 Run `docker-compose down` — exit 0.
+  - [x] 7.5 Verify filtering: Use `Select-String` to filter a specific SyncRunId and confirm only entries from that one run appear.
+  - [x] 7.6 Run `docker-compose down` — exit 0.
 
 ## Dev Notes
 
@@ -432,10 +432,27 @@ Pattern: Each story produces 2 commits (story file generation, then completion).
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- All 7 tasks completed. Tasks 1–5 were already implemented from a prior partial run; resumed from Task 6.
+- Task 6: "Viewing Sync Logs" section added to README after "Direct Database Inspection" with cross-reference sentence.
+- Task 7: Docker smoke test passed — SyncRunId visible in ServerService logs, CorrelationId visible in ClientService logs, log filtering by SyncRunId works correctly. `docker compose down` exited 0.
+- Build: 0 errors, 0 warnings. All 69 tests pass.
+- Code review (2026-03-11): Fixed Task 4.2 scope propagation description (ILogger.BeginScope uses AsyncLocal — scope is disposed before controller logs execute). Removed null-conditional `Request?.Headers` in `SyncMeasurementsController` (Request is non-null in ASP.NET Core controller actions). Double-logging (service LogError + controller LogWarning on HTTP failure) is intentional: service log carries correlation scope; controller log is an HTTP endpoint boundary marker.
+
 ### File List
+
+- `ServerService/Program.cs` — Added `AddSimpleConsole` with `IncludeScopes=true`
+- `ClientService/Program.cs` — Added `AddSimpleConsole` with `IncludeScopes=true`
+- `ServerService/Controllers/SyncMeasurementsController.cs` — Added `BeginScope` to Push/Pull, pre-generated SyncRunId, updated log messages; removed null-conditional on `Request.Headers` (code review fix)
+- `ClientService/Services/MeasurementSyncService.cs` — Injected `ClientIdentityOptions`, added `BeginScope` to PushAsync/PullAsync, added `X-Correlation-Id` header, updated log messages
+- `ClientService/Controllers/MeasurementsController.cs` — Log message enhancements (exception messages in Warning/Error logs)
+- `README.md` — Added "Viewing Sync Logs" section and cross-reference in "Direct Database Inspection"
+- `MicroservicesSync.Tests/Measurements/MeasurementCountTests.cs` — Updated `MeasurementSyncService` constructor call (added `IOptions<ClientIdentityOptions>` parameter)
+- `MicroservicesSync.Tests/Measurements/MeasurementPullTests.cs` — Updated `MeasurementSyncService` constructor call (added `IOptions<ClientIdentityOptions>` parameter)
+- `MicroservicesSync.Tests/Measurements/MeasurementPushTests.cs` — Updated `MeasurementSyncService` constructor call (added `IOptions<ClientIdentityOptions>` parameter)
+- `MicroservicesSync.Tests/Measurements/RepeatableSyncRunTests.cs` — Updated `MeasurementSyncService` constructor call (added `IOptions<ClientIdentityOptions>` parameter)
