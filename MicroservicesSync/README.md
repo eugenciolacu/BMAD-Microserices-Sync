@@ -120,8 +120,121 @@ Expected response: `{"message":"Reference data loaded."}`
 | Cells         | 16            | 16                 |
 | Measurements  | 0             | 0                  |
 
+> After a reset, the expected table counts listed in the [Direct Database Inspection](#direct-database-inspection) section serve as the verification baseline for direct DB queries.
+
 ## Running Tests
 
 ```bash
 dotnet test MicroservicesSync.Tests/MicroservicesSync.Tests.csproj
 ```
+
+> To verify data correctness beyond the tests, see the [Direct Database Inspection](#direct-database-inspection) section below.
+
+## Direct Database Inspection
+
+Use the tools in this section to verify data correctness beyond the UI — useful when diagnosing sync issues or confirming that a scenario completed as expected.
+
+### SQL Server (ServerService) — SSMS
+
+SQL Server port `1433` is already exposed in `docker-compose.yml` (`ports: - "1433:1433"` under the `sqlserver` service) — no docker-compose changes are needed.
+
+**SSMS connection parameters:**
+
+| Parameter                | Value                                    |
+|--------------------------|------------------------------------------|
+| Server                   | `localhost,1433`                         |
+| Authentication           | SQL Server Authentication                |
+| Login                    | `sa`                                     |
+| Password                 | Value from `.env` file (`SA_PASSWORD`)   |
+| Trust Server Certificate | Checked (required — container uses a self-signed cert) |
+| Database to explore      | `ServerServiceDb`                        |
+
+**Key tables:**
+
+| Table          | Description                                              |
+|----------------|----------------------------------------------------------|
+| `Measurements` | All measurements pushed by all clients                   |
+| `SyncRuns`     | Summary records for each push/pull sync run (added in Story 3.1) |
+| `Users`        | 5 seeded users; each has a stable `UserId` GUID          |
+| `Buildings`    | 2 seeded buildings                                       |
+| `Rooms`        | 4 seeded rooms                                           |
+| `Surfaces`     | 8 seeded surfaces                                        |
+| `Cells`        | 16 seeded cells                                          |
+
+**Example diagnostic queries:**
+
+```sql
+-- Count measurements per user/client
+SELECT UserId, COUNT(*) AS MeasurementCount
+FROM Measurements
+GROUP BY UserId
+ORDER BY MeasurementCount DESC;
+
+-- View all sync runs (most recent first)
+SELECT OccurredAt, RunType, UserId, MeasurementCount, Status, ErrorMessage
+FROM SyncRuns
+ORDER BY OccurredAt DESC;
+
+-- Verify convergence: compare ServerService measurement count with expected total
+SELECT COUNT(*) AS TotalMeasurements FROM Measurements;
+-- Expected after 5-client standard run: 5 clients × MeasurementsPerClient value
+```
+
+> **Note on `SyncedAt`:** In the `Measurements` table on the server, `SyncedAt` is always NULL by design — it is a client-side tracking field only. This is expected behaviour, not a data problem.
+
+> **Note on `RowVersion`:** Most tables (`Measurements`, `Users`, `Buildings`, `Rooms`, `Surfaces`, `Cells`) include a `RowVersion` (`timestamp`) column used as a concurrency token. It is a binary value managed automatically by SQL Server — safe to ignore during inspection. `SyncRuns` does not have a `RowVersion` column.
+
+### SQLite (ClientService) — DB Browser for SQLite
+
+Recommended viewer: **DB Browser for SQLite** ([https://sqlitebrowser.org](https://sqlitebrowser.org)) — free, cross-platform, no login required.
+
+Each ClientService container stores its SQLite database inside the container at `/app/SqLiteDatabase/<filename>`. Use `docker cp` to copy a snapshot to your host:
+
+**Method A — Docker cp (recommended):**
+
+```powershell
+# For User 1:
+docker cp clientservice-app-user1:/app/SqLiteDatabase/ClientServiceDbUser1.sqlite ./ClientServiceDbUser1.sqlite
+# For User 2–5: substitute the container name and filename accordingly
+# Container names: clientservice-app-user2, ..., clientservice-app-user5
+# File names:       ClientServiceDbUser2.sqlite, ..., ClientServiceDbUser5.sqlite
+```
+
+**Method B — Bind-mount path (not applicable by default):**
+
+> The default `docker-compose.yml` uses named volumes (not host bind mounts), so there is no host directory path to open directly. Method A (`docker cp`) is the canonical approach. The file extracted is a point-in-time snapshot — run `docker cp` again after additional sync activity to capture updated data.
+
+**Key tables:**
+
+| Table          | Description                                               |
+|----------------|-----------------------------------------------------------|
+| `Measurements` | This client's local measurements (may include synced)     |
+| `Users`        | 5 users pulled from ServerService during reference sync   |
+| `Buildings`    | 2 buildings pulled from ServerService                     |
+| `Rooms`        | 4 rooms pulled from ServerService                         |
+| `Surfaces`     | 8 surfaces pulled from ServerService                      |
+| `Cells`        | 16 cells pulled from ServerService                        |
+
+**Example diagnostic queries (SQLite):**
+
+```sql
+-- Count local measurements on this client
+SELECT COUNT(*) FROM Measurements;
+
+-- Inspect measurement details
+SELECT Id, UserId, RecordedAt, SyncedAt, Value
+FROM Measurements
+ORDER BY RecordedAt DESC
+LIMIT 20;
+
+-- Verify reference data was pulled correctly
+SELECT COUNT(*) FROM Users;      -- expected: 5
+SELECT COUNT(*) FROM Buildings;  -- expected: 2
+SELECT COUNT(*) FROM Rooms;      -- expected: 4
+SELECT COUNT(*) FROM Surfaces;   -- expected: 8
+SELECT COUNT(*) FROM Cells;      -- expected: 16
+```
+
+> **Note on `SyncedAt`:** In the ClientService `Measurements` table, `SyncedAt` is set to a UTC timestamp when a measurement was successfully **pushed** to ServerService by this client. A NULL value means either (a) the measurement was generated locally but not yet pushed, or (b) the measurement was **pulled** from another client — pulled measurements always arrive with `SyncedAt = null`.
+
+> **Note on `ConcurrencyStamp`:** Tables include a `ConcurrencyStamp` (integer) column used as a concurrency token. Safe to ignore during inspection.

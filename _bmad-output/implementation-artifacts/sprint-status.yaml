@@ -81,7 +81,7 @@ development_status:
   epic-3: in-progress
   3-1-server-side-sync-run-summary-view: done
   3-2-measurement-inspection-via-jqgrid-on-both-services: done
-  3-3-direct-database-inspection-support-for-diagnostics: ready-for-dev
+  3-3-direct-database-inspection-support-for-diagnostics: done
   3-4-application-logging-for-sync-operations: backlog
   3-5-troubleshooting-flow-for-unexpected-sync-outcomes: backlog
   epic-3-retrospective: optional
