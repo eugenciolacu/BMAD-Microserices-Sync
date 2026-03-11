@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Measurements";
+}
+
+<link rel="stylesheet" href="~/lib/jqueryui/themes/base/jquery-ui.min.css" />
+<link rel="stylesheet" href="~/lib/free-jqgrid/css/ui.jqgrid.min.css" />
+
+<style>
+    /* Custom grid selection colors */
+    #measurementsGrid .ui-state-highlight,
+    #measurementsGrid tr.ui-state-highlight td {
+        background-color: #e8e8e8 !important;
+        border-color: transparent !important;
+    }
+    #measurementsGrid .edit-cell {
+        background-color: #e8e8e8 !important;
+        border-color: transparent !important;
+    }
+</style>
+
+<h2>Measurements</h2>
+<p>Inspect, sort, filter, and manage measurements on ClientService. Use the filter toolbar row to search by any column.</p>
+
+<table id="measurementsGrid"></table>
+<div id="measurementsGridPager"></div>
+
+@section Scripts {
+    <script src="~/lib/free-jqgrid/jquery.jqgrid.min.js"></script>
+    <script src="~/js/gridUtils.js" asp-append-version="true"></script>
+    <script src="~/js/grids/measurementsGrid.js" asp-append-version="true"></script>
+    <script>
+        $(function () {
+            "use strict";
+            MeasurementsGrid.init("#measurementsGrid", "#measurementsGridPager");
+        });
+    </script>
+}

@@ -1,6 +1,6 @@
-# Story 3.2: Measurement Inspection via jqGrid on Both Services
+﻿# Story 3.2: Measurement Inspection via jqGrid on Both Services
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,8 +24,8 @@ So that I can manually inspect and compare measurement records after sync.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add jqGrid client-side libraries via LibMan to both services** (AC: #1, #2)
-  - [ ] 1.1 Create `ServerService/libman.json` with the following content:
+- [x] **Task 1: Add jqGrid client-side libraries via LibMan to both services** (AC: #1, #2)
+  - [x] 1.1 Create `ServerService/libman.json` with the following content:
     ```json
     {
       "version": "1.0",
@@ -43,8 +43,8 @@ So that I can manually inspect and compare measurement records after sync.
     }
     ```
     **Note**: jQuery 3.7.1 is already present at `wwwroot/lib/jquery/` (shipped with the ASP.NET Core template). Only jQuery UI and free-jqGrid need to be added. Do NOT add a duplicate jQuery entry.
-  - [ ] 1.2 Create `ClientService/libman.json` with identical content to 1.1.
-  - [ ] 1.3 Restore libraries for ServerService:
+  - [x] 1.2 Create `ClientService/libman.json` with identical content to 1.1.
+  - [x] 1.3 Restore libraries for ServerService:
     ```powershell
     cd "MicroservicesSync/ServerService"
     dotnet tool restore   # if libman CLI not yet available
@@ -53,17 +53,17 @@ So that I can manually inspect and compare measurement records after sync.
     Verify the following directories are created and populated:
     - `ServerService/wwwroot/lib/jqueryui/` (contains `jquery-ui.min.js`, `themes/base/jquery-ui.min.css`, etc.)
     - `ServerService/wwwroot/lib/free-jqgrid/` (contains `js/jquery.jqgrid.min.js`, `css/ui.jqgrid.min.css`, etc.)
-  - [ ] 1.4 Restore libraries for ClientService:
+  - [x] 1.4 Restore libraries for ClientService:
     ```powershell
     cd "MicroservicesSync/ClientService"
     libman restore
     ```
     Verify the same directories are created under `ClientService/wwwroot/lib/`.
-  - [ ] 1.5 **SCOPE GUARD**: The `_Layout.cshtml` files already include jQuery (`~/lib/jquery/dist/jquery.min.js`). Do NOT add jQuery via LibMan — it would create a duplicate. The jqGrid and jQuery UI CSS/JS will be referenced from the Measurements view page, not from `_Layout.cshtml`.
-  - [ ] 1.6 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 1.5 **SCOPE GUARD**: The `_Layout.cshtml` files already include jQuery (`~/lib/jquery/dist/jquery.min.js`). Do NOT add jQuery via LibMan — it would create a duplicate. The jqGrid and jQuery UI CSS/JS will be referenced from the Measurements view page, not from `_Layout.cshtml`.
+  - [x] 1.6 Run `dotnet build MicrosericesSync.sln` — 0 errors.
 
-- [ ] **Task 2: Add `JqGridFilter` model and `JqGridHelper` to shared infrastructure** (AC: #1, #2, #3)
-  - [ ] 2.1 Create `Sync.Infrastructure/Grid/JqGridFilter.cs`:
+- [x] **Task 2: Add `JqGridFilter` model and `JqGridHelper` to shared infrastructure** (AC: #1, #2, #3)
+  - [x] 2.1 Create `Sync.Infrastructure/Grid/JqGridFilter.cs`:
     ```csharp
     namespace Sync.Infrastructure.Grid;
 
@@ -84,7 +84,7 @@ So that I can manually inspect and compare measurement records after sync.
         public string Data { get; set; } = string.Empty;
     }
     ```
-  - [ ] 2.2 Create `Sync.Infrastructure/Grid/JqGridHelper.cs` with a static `ApplyFilters<T>` method that builds LINQ expression trees from `JqGridFilter`. This is adapted from the reference `Repository.cs` but extended to handle `Guid`, `Guid?`, `decimal`, `DateTime`, and `DateTime?` types in addition to `string` and `int`:
+  - [x] 2.2 Create `Sync.Infrastructure/Grid/JqGridHelper.cs` with a static `ApplyFilters<T>` method that builds LINQ expression trees from `JqGridFilter`. This is adapted from the reference `Repository.cs` but extended to handle `Guid`, `Guid?`, `decimal`, `DateTime`, and `DateTime?` types in addition to `string` and `int`:
     ```csharp
     using System.Linq.Expressions;
 
@@ -267,12 +267,12 @@ So that I can manually inspect and compare measurement records after sync.
         }
     }
     ```
-  - [ ] 2.3 Place these files in `Sync.Infrastructure/Grid/` — a new folder. This is shared code used by both ServerService and ClientService controllers. It does NOT require any DbContext dependency or DI registration.
-  - [ ] 2.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
-  - [ ] 2.5 **SCOPE GUARD**: Do NOT create a generic repository or generic service layer. The `JqGridHelper` is a standalone static utility. Controllers call it directly against their `DbSet<T>` queries — consistent with the direct-DbContext-injection pattern used throughout this project.
+  - [x] 2.3 Place these files in `Sync.Infrastructure/Grid/` — a new folder. This is shared code used by both ServerService and ClientService controllers. It does NOT require any DbContext dependency or DI registration.
+  - [x] 2.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 2.5 **SCOPE GUARD**: Do NOT create a generic repository or generic service layer. The `JqGridHelper` is a standalone static utility. Controllers call it directly against their `DbSet<T>` queries — consistent with the direct-DbContext-injection pattern used throughout this project.
 
-- [ ] **Task 3: Add `MeasurementsGridController` to ServerService** (AC: #1, #3)
-  - [ ] 3.1 Create `ServerService/Controllers/MeasurementsGridController.cs`:
+- [x] **Task 3: Add `MeasurementsGridController` to ServerService** (AC: #1, #3)
+  - [x] 3.1 Create `ServerService/Controllers/MeasurementsGridController.cs`:
     ```csharp
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -474,13 +474,13 @@ So that I can manually inspect and compare measurement records after sync.
         public Guid CellId { get; set; }
     }
     ```
-  - [ ] 3.2 The route is `api/v1/measurements-grid` (not `api/v1/measurements`) to avoid collision with the existing `MeasurementsController` on ClientService (which uses `api/v1/measurements` for sync operations). ServerService currently has no `MeasurementsController`.
-  - [ ] 3.3 The `Select` projection returns anonymous objects with camelCase property names by default (ASP.NET Core's `System.Text.Json` camelCase policy). This matches what jqGrid expects in the `colModel` `name` fields.
-  - [ ] 3.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
-  - [ ] 3.5 **SCOPE GUARD**: Do NOT create separate DTO classes in a `DTOs/` folder, AutoMapper profiles, or a generic service/repository. Keep it simple — anonymous projections in the controller, request DTOs co-located in the same file.
+  - [x] 3.2 The route is `api/v1/measurements-grid` (not `api/v1/measurements`) to avoid collision with the existing `MeasurementsController` on ClientService (which uses `api/v1/measurements` for sync operations). ServerService currently has no `MeasurementsController`.
+  - [x] 3.3 The `Select` projection returns anonymous objects with camelCase property names by default (ASP.NET Core's `System.Text.Json` camelCase policy). This matches what jqGrid expects in the `colModel` `name` fields.
+  - [x] 3.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 3.5 **SCOPE GUARD**: Do NOT create separate DTO classes in a `DTOs/` folder, AutoMapper profiles, or a generic service/repository. Keep it simple — anonymous projections in the controller, request DTOs co-located in the same file.
 
-- [ ] **Task 4: Add `MeasurementsGridController` to ClientService** (AC: #2, #3)
-  - [ ] 4.1 Create `ClientService/Controllers/MeasurementsGridController.cs`:
+- [x] **Task 4: Add `MeasurementsGridController` to ClientService** (AC: #2, #3)
+  - [x] 4.1 Create `ClientService/Controllers/MeasurementsGridController.cs`:
     ```csharp
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -671,13 +671,13 @@ So that I can manually inspect and compare measurement records after sync.
         public Guid CellId { get; set; }
     }
     ```
-  - [ ] 4.2 The ClientService version is functionally identical to ServerService's — same route (`api/v1/measurements-grid`), same endpoints, same `Select` projection. The only difference is `ClientDbContext` vs `ServerDbContext`.
-  - [ ] 4.3 ClientService already has an existing `MeasurementsController` at `api/v1/measurements` for sync operations (generate, push, pull, count). The new `MeasurementsGridController` at `api/v1/measurements-grid` is separate — no collision.
-  - [ ] 4.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
-  - [ ] 4.5 **SCOPE GUARD**: Do NOT share the request DTO types between the two services via a shared library. Web-layer DTOs stay in the web project. The duplication is intentional and minimal.
+  - [x] 4.2 The ClientService version is functionally identical to ServerService's — same route (`api/v1/measurements-grid`), same endpoints, same `Select` projection. The only difference is `ClientDbContext` vs `ServerDbContext`.
+  - [x] 4.3 ClientService already has an existing `MeasurementsController` at `api/v1/measurements` for sync operations (generate, push, pull, count). The new `MeasurementsGridController` at `api/v1/measurements-grid` is separate — no collision.
+  - [x] 4.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 4.5 **SCOPE GUARD**: Do NOT share the request DTO types between the two services via a shared library. Web-layer DTOs stay in the web project. The duplication is intentional and minimal.
 
-- [ ] **Task 5: Create `gridUtils.js` shared JavaScript module for both services** (AC: #1, #2)
-  - [ ] 5.1 Create `ServerService/wwwroot/js/gridUtils.js` adapted from the reference `docs/code-snippets/wwwroot/js/gridUtils.js`. The module uses the IIFE pattern and provides:
+- [x] **Task 5: Create `gridUtils.js` shared JavaScript module for both services** (AC: #1, #2)
+  - [x] 5.1 Create `ServerService/wwwroot/js/gridUtils.js` adapted from the reference `docs/code-snippets/wwwroot/js/gridUtils.js`. The module uses the IIFE pattern and provides:
     - `addKeyboardHandlers(dialogSelector, isEditOrAdd)` — Enter to submit, ESC to cancel
     - `centerDialog(dialogSelector)` — centers jqGrid dialogs in viewport
     - `handleSubmitResponse(response, postData)` — standard [success, message, newId] response handler
@@ -704,11 +704,11 @@ So that I can manually inspect and compare measurement records after sync.
 
     **Key difference from reference**: The `onclickSubmit` in `getEditOptions` and `getDeleteOptions` must send the **Guid** row ID (not an int) in the URL. The reference code already uses `$(gridId).jqGrid('getGridParam', 'selrow')` which returns the string rowid — this works with Guid IDs without changes.
 
-  - [ ] 5.2 Copy the identical `gridUtils.js` file to `ClientService/wwwroot/js/gridUtils.js`. Both services use the same utility module.
-  - [ ] 5.3 **SCOPE GUARD**: Do NOT factor `gridUtils.js` into a shared npm package or shared build step. Simple file copy is appropriate for two services.
+  - [x] 5.2 Copy the identical `gridUtils.js` file to `ClientService/wwwroot/js/gridUtils.js`. Both services use the same utility module.
+  - [x] 5.3 **SCOPE GUARD**: Do NOT factor `gridUtils.js` into a shared npm package or shared build step. Simple file copy is appropriate for two services.
 
-- [ ] **Task 6: Create `measurementsGrid.js` for both services** (AC: #1, #2, #3)
-  - [ ] 6.1 Create `ServerService/wwwroot/js/grids/measurementsGrid.js` using the IIFE pattern from the reference `buildingsGrid.js`, adapted for this project's Measurement entity:
+- [x] **Task 6: Create `measurementsGrid.js` for both services** (AC: #1, #2, #3)
+  - [x] 6.1 Create `ServerService/wwwroot/js/grids/measurementsGrid.js` using the IIFE pattern from the reference `buildingsGrid.js`, adapted for this project's Measurement entity:
     ```javascript
     /**
      * Measurements Grid Configuration
@@ -853,17 +853,17 @@ So that I can manually inspect and compare measurement records after sync.
         };
     })();
     ```
-  - [ ] 6.2 Key differences from the reference `measurementsGrid.js`:
+  - [x] 6.2 Key differences from the reference `measurementsGrid.js`:
     - **Guid IDs** (not int): `id`, `userId`, `cellId` columns are wide (280px) and use `sopt: ['eq', 'ne']` (not numeric comparisons).
     - **This project's fields**: `value` (decimal), `recordedAt` (DateTime), `syncedAt` (DateTime?, read-only), `userId` (Guid), `cellId` (Guid). NOT alpha/beta/offsetX/offsetY from the reference.
     - **Default sort**: `sortname: "recordedAt"`, `sortorder: "desc"` (newest first — most useful for inspection).
     - **`syncedAt` is not editable**: It is set by the sync process, not manually.
     - **Responsive width**: Grid resizes on window resize via the `$(window).on('resize')` handler.
-  - [ ] 6.3 Copy the identical `measurementsGrid.js` to `ClientService/wwwroot/js/grids/measurementsGrid.js`. Both services use the same grid definition since the API endpoint path (`/api/v1/measurements-grid/paged`) and response shape are identical.
-  - [ ] 6.4 **SCOPE GUARD**: Do NOT create grid JS files for other entities (Buildings, Rooms, Surfaces, Cells, Users). This story is scoped to Measurements only. Future stories may add other entity grids to ServerService — they are not needed now.
+  - [x] 6.3 Copy the identical `measurementsGrid.js` to `ClientService/wwwroot/js/grids/measurementsGrid.js`. Both services use the same grid definition since the API endpoint path (`/api/v1/measurements-grid/paged`) and response shape are identical.
+  - [x] 6.4 **SCOPE GUARD**: Do NOT create grid JS files for other entities (Buildings, Rooms, Surfaces, Cells, Users). This story is scoped to Measurements only. Future stories may add other entity grids to ServerService — they are not needed now.
 
-- [ ] **Task 7: Add Measurements grid view page to ServerService** (AC: #1, #3)
-  - [ ] 7.1 Create `ServerService/Views/Home/Measurements.cshtml`:
+- [x] **Task 7: Add Measurements grid view page to ServerService** (AC: #1, #3)
+  - [x] 7.1 Create `ServerService/Views/Home/Measurements.cshtml`:
     ```html
     @{
         ViewData["Title"] = "Measurements";
@@ -903,51 +903,51 @@ So that I can manually inspect and compare measurement records after sync.
         </script>
     }
     ```
-  - [ ] 7.2 Add a `Measurements` action to `ServerService/Controllers/HomeController.cs`:
+  - [x] 7.2 Add a `Measurements` action to `ServerService/Controllers/HomeController.cs`:
     ```csharp
     public IActionResult Measurements()
     {
         return View();
     }
     ```
-  - [ ] 7.3 The Measurements page is accessible at `/Home/Measurements` (conventional route). This keeps it separate from the admin/scenario home page and avoids cluttering `Index.cshtml`.
-  - [ ] 7.4 **jQuery UI CSS is loaded on this page only** (via `<link>` in the page, not in `_Layout.cshtml`). This prevents jQuery UI theme styles from leaking into the rest of the app. The jQuery UI JS is NOT needed — only the CSS theme is required for jqGrid styling. jQuery itself is already loaded from `_Layout.cshtml`.
-  - [ ] 7.5 The `@section Scripts` block ensures script references render at the bottom of the page (after `_Layout.cshtml`'s jQuery include), so `$` is available when `gridUtils.js` and `measurementsGrid.js` execute.
-  - [ ] 7.6 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 7.3 The Measurements page is accessible at `/Home/Measurements` (conventional route). This keeps it separate from the admin/scenario home page and avoids cluttering `Index.cshtml`.
+  - [x] 7.4 **jQuery UI CSS is loaded on this page only** (via `<link>` in the page, not in `_Layout.cshtml`). This prevents jQuery UI theme styles from leaking into the rest of the app. The jQuery UI JS is NOT needed — only the CSS theme is required for jqGrid styling. jQuery itself is already loaded from `_Layout.cshtml`.
+  - [x] 7.5 The `@section Scripts` block ensures script references render at the bottom of the page (after `_Layout.cshtml`'s jQuery include), so `$` is available when `gridUtils.js` and `measurementsGrid.js` execute.
+  - [x] 7.6 Run `dotnet build MicrosericesSync.sln` — 0 errors.
 
-- [ ] **Task 8: Add Measurements grid view page to ClientService** (AC: #2, #3)
-  - [ ] 8.1 Create `ClientService/Views/Home/Measurements.cshtml` with identical content to ServerService's version (Task 7.1), except the `<p>` description text should say "ClientService" instead of "ServerService":
+- [x] **Task 8: Add Measurements grid view page to ClientService** (AC: #2, #3)
+  - [x] 8.1 Create `ClientService/Views/Home/Measurements.cshtml` with identical content to ServerService's version (Task 7.1), except the `<p>` description text should say "ClientService" instead of "ServerService":
     ```html
     <p>Inspect, sort, filter, and manage measurements on ClientService. Use the filter toolbar row to search by any column.</p>
     ```
-  - [ ] 8.2 Add a `Measurements` action to `ClientService/Controllers/HomeController.cs`:
+  - [x] 8.2 Add a `Measurements` action to `ClientService/Controllers/HomeController.cs`:
     ```csharp
     public IActionResult Measurements()
     {
         return View();
     }
     ```
-  - [ ] 8.3 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 8.3 Run `dotnet build MicrosericesSync.sln` — 0 errors.
 
-- [ ] **Task 9: Add navigation links to Measurements grid from both services' home pages** (AC: #1, #2)
-  - [ ] 9.1 In `ServerService/Views/Shared/_Layout.cshtml`, add a nav link for Measurements. Insert a new `<li>` after the existing Privacy nav item:
+- [x] **Task 9: Add navigation links to Measurements grid from both services' home pages** (AC: #1, #2)
+  - [x] 9.1 In `ServerService/Views/Shared/_Layout.cshtml`, add a nav link for Measurements. Insert a new `<li>` after the existing Privacy nav item:
     ```html
     <li class="nav-item">
         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Measurements">Measurements</a>
     </li>
     ```
-  - [ ] 9.2 In `ClientService/Views/Shared/_Layout.cshtml`, add the same nav link:
+  - [x] 9.2 In `ClientService/Views/Shared/_Layout.cshtml`, add the same nav link:
     ```html
     <li class="nav-item">
         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Measurements">Measurements</a>
     </li>
     ```
-  - [ ] 9.3 This adds "Measurements" to the top navigation bar on both services, making the grid accessible from any page. The link points to `/Home/Measurements`.
-  - [ ] 9.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 9.3 This adds "Measurements" to the top navigation bar on both services, making the grid accessible from any page. The link points to `/Home/Measurements`.
+  - [x] 9.4 Run `dotnet build MicrosericesSync.sln` — 0 errors.
 
-- [ ] **Task 10: Write unit tests for `MeasurementsGridController` paged/filtered queries** (AC: #1, #2, #3)
-  - [ ] 10.1 Create `MicroservicesSync.Tests/MeasurementsGrid/MeasurementsGridPagingTests.cs`.
-  - [ ] 10.2 Use the same in-memory SQLite test pattern from Story 3.1:
+- [x] **Task 10: Write unit tests for `MeasurementsGridController` paged/filtered queries** (AC: #1, #2, #3)
+  - [x] 10.1 Create `MicroservicesSync.Tests/MeasurementsGrid/MeasurementsGridPagingTests.cs`.
+  - [x] 10.2 Use the same in-memory SQLite test pattern from Story 3.1:
     - Declare a `TestableServerDbContextForGrid` inner class (same `RowVersion` → `ValueGeneratedNever` override pattern).
     - Use `SqliteConnection` kept open + `DbContextOptions<ServerDbContext>` over SQLite.
     - Implement `IDisposable`.
@@ -955,36 +955,36 @@ So that I can manually inspect and compare measurement records after sync.
       - User 1: `00000000-0000-0000-0000-000000000001`
       - Cell 1: first Cell GUID from `DatabaseSeeder` (look up the actual value)
     - Seed a set of Measurement rows with varying `Value`, `RecordedAt`, `UserId`, `CellId` values for filtering/sorting tests.
-  - [ ] 10.3 Test `GetPaged_NoFilters_ReturnsFirstPage`:
+  - [x] 10.3 Test `GetPaged_NoFilters_ReturnsFirstPage`:
     - Seed 15 measurements.
     - Call `GetPaged(page: 1, pageSize: 10)`.
     - Assert HTTP 200. Assert 10 `data` items returned. Assert `totalCount == 15`, `totalPages == 2`, `page == 1`.
-  - [ ] 10.4 Test `GetPaged_Page2_ReturnsRemainder`:
+  - [x] 10.4 Test `GetPaged_Page2_ReturnsRemainder`:
     - Seed 15 measurements.
     - Call `GetPaged(page: 2, pageSize: 10)`.
     - Assert HTTP 200. Assert 5 `data` items returned.
-  - [ ] 10.5 Test `GetPaged_FilterByUserId_ReturnsOnlyMatchingRows`:
+  - [x] 10.5 Test `GetPaged_FilterByUserId_ReturnsOnlyMatchingRows`:
     - Seed 10 measurements: 7 for User1, 3 for User2.
     - Build a `filters` JSON: `{"groupOp":"AND","rules":[{"field":"userId","op":"eq","data":"<user1-guid>"}]}`.
     - Call `GetPaged` with that filters string.
     - Assert 7 results returned.
-  - [ ] 10.6 Test `GetPaged_FilterByValueRange_ReturnsCorrectSubset`:
+  - [x] 10.6 Test `GetPaged_FilterByValueRange_ReturnsCorrectSubset`:
     - Seed measurements with Values: 1.0, 2.0, 3.0, 4.0, 5.0.
     - Filter: `value gt 2.0`.
     - Assert 3 results returned (3.0, 4.0, 5.0).
-  - [ ] 10.7 Test `GetPaged_SortByValueDesc_ReturnsDescending`:
+  - [x] 10.7 Test `GetPaged_SortByValueDesc_ReturnsDescending`:
     - Seed measurements with varying Values.
     - Call `GetPaged(sortBy: "value", sortOrder: "desc")`.
     - Assert first returned value >= second returned value.
-  - [ ] 10.8 Test `GetPaged_InvalidFilterJson_Returns400`:
+  - [x] 10.8 Test `GetPaged_InvalidFilterJson_Returns400`:
     - Call `GetPaged(filters: "not-json")`.
     - Assert HTTP 400.
-  - [ ] 10.9 Run `dotnet build MicrosericesSync.sln` — 0 errors.
-  - [ ] 10.10 Run `dotnet test` — all existing tests pass; new tests pass.
+  - [x] 10.9 Run `dotnet build MicrosericesSync.sln` — 0 errors.
+  - [x] 10.10 Run `dotnet test` — all existing tests pass; new tests pass.
 
-- [ ] **Task 11: Write unit tests for `JqGridHelper` filter expressions** (AC: #3)
-  - [ ] 11.1 Create `MicroservicesSync.Tests/MeasurementsGrid/JqGridHelperTests.cs`.
-  - [ ] 11.2 These tests operate on in-memory `List<T>.AsQueryable()` — no database needed. Define a simple test entity class within the test file:
+- [x] **Task 11: Write unit tests for `JqGridHelper` filter expressions** (AC: #3)
+  - [x] 11.1 Create `MicroservicesSync.Tests/MeasurementsGrid/JqGridHelperTests.cs`.
+  - [x] 11.2 These tests operate on in-memory `List<T>.AsQueryable()` — no database needed. Define a simple test entity class within the test file:
     ```csharp
     private class TestEntity
     {
@@ -996,48 +996,48 @@ So that I can manually inspect and compare measurement records after sync.
         public int Count { get; set; }
     }
     ```
-  - [ ] 11.3 Test `ApplyFilters_GuidEq_FiltersCorrectly`:
+  - [x] 11.3 Test `ApplyFilters_GuidEq_FiltersCorrectly`:
     - Create 3 items with different GUIDs.
     - Filter: `id eq <guid-of-item-2>`.
     - Assert 1 result with matching ID.
-  - [ ] 11.4 Test `ApplyFilters_DecimalGt_FiltersCorrectly`:
+  - [x] 11.4 Test `ApplyFilters_DecimalGt_FiltersCorrectly`:
     - Create items with Values 1.0, 2.0, 3.0.
     - Filter: `value gt 1.5`.
     - Assert 2 results (2.0, 3.0).
-  - [ ] 11.5 Test `ApplyFilters_DateTimeGe_FiltersCorrectly`:
+  - [x] 11.5 Test `ApplyFilters_DateTimeGe_FiltersCorrectly`:
     - Create items with dates 2026-01-01, 2026-06-01, 2026-12-01.
     - Filter: `createdAt ge 2026-06-01`.
     - Assert 2 results.
-  - [ ] 11.6 Test `ApplyFilters_StringContains_FiltersCorrectly`:
+  - [x] 11.6 Test `ApplyFilters_StringContains_FiltersCorrectly`:
     - Create items with names "Alpha", "Beta", "AlphaTwo".
     - Filter: `name cn Alpha`.
     - Assert 2 results.
-  - [ ] 11.7 Test `ApplyFilters_InvalidFieldName_IgnoredSafely`:
+  - [x] 11.7 Test `ApplyFilters_InvalidFieldName_IgnoredSafely`:
     - Filter with `field: "nonexistent"`.
     - Assert all items still returned (filter rule skipped).
-  - [ ] 11.8 Test `ApplyFilters_InvalidGuidData_IgnoredSafely`:
+  - [x] 11.8 Test `ApplyFilters_InvalidGuidData_IgnoredSafely`:
     - Filter: `id eq not-a-guid`.
     - Assert all items still returned (unparseable rule skipped).
-  - [ ] 11.9 Test `ApplySort_SortByValueDesc_SortsCorrectly`:
+  - [x] 11.9 Test `ApplySort_SortByValueDesc_SortsCorrectly`:
     - Create items with Values 3.0, 1.0, 2.0.
     - Sort: `sortBy: "value"`, `sortOrder: "desc"`.
     - Assert order: 3.0, 2.0, 1.0.
-  - [ ] 11.10 Run `dotnet test` — all tests pass.
+  - [x] 11.10 Run `dotnet test` — all tests pass.
 
-- [ ] **Task 12: Manual Docker smoke test** (AC: #1, #2, #3)
-  - [ ] 12.1 Run `docker-compose up --build -d` from `MicroservicesSync/`.
-  - [ ] 12.2 Open ServerService home page (`http://localhost:5100`). Confirm the new "Measurements" link appears in the top navigation bar.
-  - [ ] 12.3 Click "Measurements" nav link. Confirm the jqGrid loads with proper columns: ID, Value, Recorded At, Synced At, User ID, Cell ID.
-  - [ ] 12.4 If measurements exist (from a previous scenario run or after running generate → push): confirm pagination shows correct page counts, sorting works (click column headers), and the filter toolbar row appears above the data rows.
-  - [ ] 12.5 Test filtering: type a known User ID in the "User ID" filter box. Confirm only matching rows appear.
-  - [ ] 12.6 Test CRUD: use the Add (+) button to create a test measurement. Use Edit (pencil) to modify it. Use Delete (trash) to remove it. Confirm each operation refreshes the grid.
-  - [ ] 12.7 Open any ClientService instance (e.g., `http://localhost:5101`). Confirm the "Measurements" nav link appears. Click it. Confirm the identical jqGrid loads.
-  - [ ] 12.8 **Comparison test (AC#2)**: Run a full scenario (generate → push → pull on all clients). After pull completes:
+- [x] **Task 12: Manual Docker smoke test** (AC: #1, #2, #3)
+  - [x] 12.1 Run `docker-compose up --build -d` from `MicroservicesSync/`.
+  - [x] 12.2 Open ServerService home page (`http://localhost:5100`). Confirm the new "Measurements" link appears in the top navigation bar.
+  - [x] 12.3 Click "Measurements" nav link. Confirm the jqGrid loads with proper columns: ID, Value, Recorded At, Synced At, User ID, Cell ID.
+  - [x] 12.4 If measurements exist (from a previous scenario run or after running generate → push): confirm pagination shows correct page counts, sorting works (click column headers), and the filter toolbar row appears above the data rows.
+  - [x] 12.5 Test filtering: type a known User ID in the "User ID" filter box. Confirm only matching rows appear.
+  - [x] 12.6 Test CRUD: use the Add (+) button to create a test measurement. Use Edit (pencil) to modify it. Use Delete (trash) to remove it. Confirm each operation refreshes the grid.
+  - [x] 12.7 Open any ClientService instance (e.g., `http://localhost:5101`). Confirm the "Measurements" nav link appears. Click it. Confirm the identical jqGrid loads.
+  - [x] 12.8 **Comparison test (AC#2)**: Run a full scenario (generate → push → pull on all clients). After pull completes:
     - On ServerService Measurements grid: sort by "User ID" ascending, note the visible rows.
     - On a ClientService Measurements grid: apply the same sort. Confirm the same measurement rows appear (same IDs, Values, timestamps).
-  - [ ] 12.9 **Resizability**: Resize the browser window. Confirm the grid width adjusts to fit the container.
-  - [ ] 12.10 Confirm existing functionality (Home page admin controls, Reset, Edge-Case Scenario, Sync Run Summary) still works on both services — no regressions.
-  - [ ] 12.11 Run `docker-compose down`.
+  - [x] 12.9 **Resizability**: Resize the browser window. Confirm the grid width adjusts to fit the container.
+  - [x] 12.10 Confirm existing functionality (Home page admin controls, Reset, Edge-Case Scenario, Sync Run Summary) still works on both services — no regressions.
+  - [x] 12.11 Run `docker-compose down`.
 
 ## Dev Notes
 
