@@ -290,3 +290,182 @@ docker logs serverservice-app 2>&1 | Select-String "<correlation-id>"
 2. Note the `SyncRunId` from the summary view (it is the `Id` column).
 3. Use `docker logs serverservice-app 2>&1 | Select-String "<SyncRunId>"` to find server-side details.
 4. If the failure originated from a ClientService push/pull, check the client's logs for the corresponding `CorrelationId` and the `X-Correlation-Id` in the server logs.
+
+## Troubleshooting Unexpected Sync Outcomes
+
+Use this section when a scenario run produces results that do not match expectations — for example, measurement counts that differ between ServerService and a ClientService instance, duplicated records, or a failed sync run. The steps below guide you through a systematic investigation using all the diagnostic tools available in the environment.
+
+**Symptom checklist**
+
+| Symptom | Start here |
+|---|---|
+| Push or pull button returned an error | Step 1 (Sync Run Summary) |
+| Measurement count on a client does not match the server after pull | Step 1, then Step 2 |
+| ServerService count is lower than expected after push | Step 1, then Step 3 |
+| Duplicate measurements appear in a jqGrid | Step 2, then Step 4 |
+| A scenario that used to converge has started failing | Step 3 (logs), then Step 4 (DB) |
+| No measurements appear at all after a full push/pull cycle | Step 1 first; verify clean baseline precondition |
+
+**Investigation steps**
+
+**Step 1 — Check the Sync Run Summary view**
+
+Open the ServerService home page at `http://localhost:5000`. The **Sync Runs** grid shows all push and pull operations in reverse-chronological order.
+
+What to look for:
+
+- **Status column**: A failed run shows `Failed` status and includes an `ErrorMessage` value. A successful run shows `Success`.
+- **MeasurementCount column**: Verify the count matches what you expected (e.g., `MeasurementsPerClient` × number of clients for a full push cycle).
+- **RunType column**: Confirm the expected `push` and `pull` runs both appear in the correct order.
+- **UserId column**: Verify each client's user GUID appears exactly once per run cycle.
+
+If a run shows `Failed`, note the `Id` (this is the `SyncRunId`) — you will need it in Step 3.
+
+If no runs appear at all after triggering sync, the HTTP request may not have reached ServerService. Check container health with `docker-compose ps` before continuing.
+
+---
+
+**Step 2 — Compare measurement counts via jqGrid**
+
+Open the Measurements grid on ServerService (`http://localhost:5000`) and on each relevant ClientService instance (`http://localhost:5001` through `http://localhost:5005`).
+
+What to check:
+
+- **Total count**: After a full push + pull cycle, the total measurement count on every service should be `N clients × MeasurementsPerClient`. The default for the standard scenario is `5 × 10 = 50`.
+- **Per-client counts**: On ServerService, filter by `UserId` for each client and verify each contributes the expected `MeasurementsPerClient` records.
+- **Duplicate detection**: If total count exceeds the expected value, sort by `Id` in the grid. Visible duplicates (same Id appearing twice) indicate a push ran more than once without a clean baseline reset. Run the reset steps from the **Reset to Clean Baseline** section and re-run the scenario.
+- **Missing client data**: If one client's count is `0` after push, check Step 3 (logs) using that client's `UserId` GUID to find the failure.
+
+The jqGrid supports filtering via the search row — click the magnifying glass icon on the grid header to open filter inputs.
+
+---
+
+**Step 3 — Trace the operation through logs**
+
+Use docker logs to find the exact server-side and client-side log entries for the failing run.
+
+**If you have a SyncRunId from Step 1:**
+
+```powershell
+# Find all server log entries for that SyncRunId
+docker logs serverservice-app 2>&1 | Select-String "<SyncRunId-here>"
+```
+
+The output will show the `BeginScope` structured fields (SyncRunId, RunType, UserId, ClientCorrelationId) and the log message lines. Look for `push failed` or `pull failed` entries with exception details.
+
+**If you do not have a SyncRunId (push never reached the server):**
+
+```powershell
+# Check the client that reported an error
+docker logs clientservice-app-user1 2>&1 | Select-String "failed"
+
+# Or tail the last 30 lines for a recent failure
+docker logs clientservice-app-user1 --tail 30
+```
+
+The ClientService log will contain a `CorrelationId` for the failed push/pull. Use that ID to find the matching server entry:
+
+```powershell
+docker logs serverservice-app 2>&1 | Select-String "<CorrelationId-here>"
+```
+
+**Common log patterns and what they mean:**
+
+| Log fragment | Meaning | Action |
+|---|---|---|
+| `push failed for user ... — transaction rolled back` | ServerService rolled back the push transaction | Check the exception messages that follow; likely a constraint violation or DB error |
+| `ServerService rejected push (HTTP 4xx): ...` | ClientService received a non-success HTTP response | Note the status code; 400 means bad request payload; 503 means server not reachable |
+| `pull failed — local transaction rolled back` | ClientService rolled back during a pull | SQLite write error or constraint violation; check for DB file permission issues |
+| `pull returned 0 measurements from ServerService` | Server returned an empty list | Verify ServerService has measurements (Step 1/Step 2); check if push ran before pull |
+| `all <N> server measurements already present locally` | Pull found all server measurements already in the client DB | Not an error; client convergence is already achieved |
+| `no pending measurements to push` | Client has no unsynced measurements to push | Run measurement generation first (`Generate` button on ClientService home page) |
+
+---
+
+**Step 4 — Inspect the databases directly**
+
+If Steps 1–3 do not resolve the issue, use direct database inspection to check the raw data.
+
+**On ServerService (SQL Server):**
+
+Connect to `localhost,1433` via SSMS (see the [Direct Database Inspection](#direct-database-inspection) section for connection details).
+
+Run these diagnostic queries:
+
+```sql
+-- Check for unexpected duplicates by Id
+SELECT Id, COUNT(*) AS Occurrences
+FROM Measurements
+GROUP BY Id
+HAVING COUNT(*) > 1;
+-- Expected result: 0 rows (no duplicates)
+
+-- Verify per-user measurement counts
+SELECT UserId, COUNT(*) AS MeasurementCount
+FROM Measurements
+GROUP BY UserId
+ORDER BY MeasurementCount DESC;
+-- Expected after standard scenario: 5 rows, each with MeasurementsPerClient value (default 10)
+
+-- Identify failed sync runs in the last hour
+SELECT Id, OccurredAt, RunType, UserId, MeasurementCount, Status, ErrorMessage
+FROM SyncRuns
+WHERE Status = 'Failed'
+  AND OccurredAt > DATEADD(HOUR, -1, GETUTCDATE())
+ORDER BY OccurredAt DESC;
+```
+
+**On each ClientService (SQLite):**
+
+Copy the SQLite file from the container:
+
+```powershell
+docker cp clientservice-app-user1:/app/SqLiteDatabase/ClientServiceDbUser1.sqlite ./ClientServiceDbUser1.sqlite
+```
+
+Open in DB Browser for SQLite and run:
+
+```sql
+-- Check total measurement count
+SELECT COUNT(*) FROM Measurements;
+-- Should equal the total on ServerService after a successful pull
+
+-- Count NULL SyncedAt: includes unsent measurements AND all pulled records (see SyncedAt semantics note below)
+SELECT COUNT(*) FROM Measurements WHERE SyncedAt IS NULL;
+-- Expected after a successful push+pull cycle: depends on pulled records
+-- Pulled measurements always have SyncedAt = NULL by design
+
+-- Check for duplicates
+SELECT Id, COUNT(*) AS Occurrences
+FROM Measurements
+GROUP BY Id
+HAVING COUNT(*) > 1;
+-- Expected result: 0 rows
+```
+
+> **Note on SyncedAt semantics:** On ClientService, `SyncedAt` is set when the client successfully *pushed* that measurement to ServerService. Measurements that arrived via *pull* will always have `SyncedAt = NULL`. This is expected behavior. On ServerService, `SyncedAt` is always NULL by design — it is a client-only tracking field.
+
+---
+
+**Step 5 — Confirm convergence after fixing**
+
+After applying a fix (such as resetting the baseline and re-running the scenario), use this quick convergence checklist:
+
+1. **Sync Run Summary** (ServerService home page): All runs from the current cycle show `Success` status.
+2. **Measurement grid totals**: ServerService total = `N clients × MeasurementsPerClient`. Each ClientService total matches ServerService's total.
+3. **No duplicates**: The duplicate detection queries in Step 4 return 0 rows on all services.
+4. **Per-client distribution on ServerService**: Each user GUID contributes the expected measurement count.
+
+If all four checks pass, convergence is confirmed.
+
+**When to escalate**
+
+If you cannot resolve the anomaly after Steps 1–5, capture the following information before escalating:
+
+- The exact scenario steps that reproduce the issue (including reset, generate, push, pull sequence).
+- The SyncRunId(s) from the failed run(s) — found in the Sync Runs grid (`Id` column).
+- The full log output from the relevant containers: `docker logs serverservice-app > server.log` and `docker logs clientservice-app-user<N> > client-userN.log`.
+- The row counts from Step 4 (SQL queries output).
+- The `docker-compose.yml` environment variable section showing current `SyncOptions__MeasurementsPerClient` and `SyncOptions__BatchSize` values.
+
+This package of information gives any developer enough context to reproduce and diagnose the issue independently.

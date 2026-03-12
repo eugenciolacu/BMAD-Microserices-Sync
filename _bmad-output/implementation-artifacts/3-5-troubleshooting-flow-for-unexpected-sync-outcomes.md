@@ -1,6 +1,6 @@
 # Story 3.5: Troubleshooting Flow for Unexpected Sync Outcomes
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,27 +26,12 @@ so that I can systematically investigate and resolve unexpected sync outcomes.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add "Troubleshooting Unexpected Sync Outcomes" section to README** (AC: #1, #2, #3)
-  - [ ] 1.1 Open `MicroservicesSync/README.md`. Locate the end of the **"Viewing Sync Logs"** section (the final paragraph ends with the 4-point "Diagnosing a failed sync operation" list). Add the new section immediately after that.
-  - [ ] 1.2 The new section heading is: `## Troubleshooting Unexpected Sync Outcomes`
-  - [ ] 1.3 Add an opening paragraph that sets context:
-
-    > Use this section when a scenario run produces results that do not match expectations — for example, measurement counts that differ between ServerService and a ClientService instance, duplicated records, or a failed sync run. The steps below guide you through a systematic investigation using all the diagnostic tools available in the environment.
-
-  - [ ] 1.4 Add a **"Symptom checklist"** subsection that maps common symptoms to investigation starting points:
-
-    **Symptom checklist**
-
-    | Symptom | Start here |
-    |---|---|
-    | Push or pull button returned an error | Step 1 (Sync Run Summary) |
-    | Measurement count on a client does not match the server after pull | Step 1, then Step 2 |
-    | ServerService count is lower than expected after push | Step 1, then Step 3 |
-    | Duplicate measurements appear in a jqGrid | Step 2, then Step 4 |
-    | A scenario that used to converge has started failing | Step 3 (logs), then Step 4 (DB) |
-    | No measurements appear at all after a full push/pull cycle | Step 1 first; verify clean baseline precondition |
-
-  - [ ] 1.5 Add the **step-by-step investigation flow** as a numbered section:
+- [x] **Task 1: Add "Troubleshooting Unexpected Sync Outcomes" section to README** (AC: #1, #2, #3)
+  - [x] 1.1 Open `MicroservicesSync/README.md`. Locate the end of the **"Viewing Sync Logs"** section (the final paragraph ends with the 4-point "Diagnosing a failed sync operation" list). Add the new section immediately after that.
+  - [x] 1.2 The new section heading is: `## Troubleshooting Unexpected Sync Outcomes`
+  - [x] 1.3 Add an opening paragraph that sets context:
+  - [x] 1.4 Add a **"Symptom checklist"** subsection that maps common symptoms to investigation starting points:
+  - [x] 1.5 Add the **step-by-step investigation flow** as a numbered section:
 
     **Investigation steps**
 
@@ -200,7 +185,7 @@ so that I can systematically investigate and resolve unexpected sync outcomes.
 
     If all four checks pass, convergence is confirmed.
 
-  - [ ] 1.6 Add a **"When to escalate"** subsection at the end of the troubleshooting section:
+  - [x] 1.6 Add a **"When to escalate"** subsection at the end of the troubleshooting section:
 
     **When to escalate**
 
@@ -214,7 +199,7 @@ so that I can systematically investigate and resolve unexpected sync outcomes.
 
     This package of information gives any developer enough context to reproduce and diagnose the issue independently.
 
-  - [ ] 1.7 Do NOT modify any other README sections. Do NOT change existing "Viewing Sync Logs" or "Direct Database Inspection" sections. The new section is additive only.
+  - [x] 1.7 Do NOT modify any other README sections. Do NOT change existing "Viewing Sync Logs" or "Direct Database Inspection" sections. The new section is additive only.
 
 ## Dev Notes
 
@@ -314,6 +299,23 @@ Claude Sonnet 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
+None — documentation-only story with no code execution required.
+
 ### Completion Notes List
 
+- Added `## Troubleshooting Unexpected Sync Outcomes` section to `MicroservicesSync/README.md` immediately after the existing "Viewing Sync Logs" section's 4-point diagnostic list.
+- Section contains: opening paragraph, symptom checklist table (6 rows mapping symptoms to starting steps), and full 5-step investigation flow covering Sync Run Summary view, jqGrid comparison, log tracing, direct DB inspection, and convergence confirmation.
+- Includes log pattern reference table, SQL diagnostic queries for both SQL Server and SQLite, `docker cp` extraction command, and `SyncedAt` semantics note.
+- "When to escalate" subsection provides a complete evidence package checklist for escalation.
+- No existing README sections were modified; the new section is purely additive.
+- Container names verified against `docker-compose.yml`: `serverservice-app`, `clientservice-app-user1` through `clientservice-app-user5`.
+- All 3 Acceptance Criteria satisfied: AC1 (guided troubleshooting order via Summary→Grid→Logs→DB), AC2 (convergence checklist in Step 5), AC3 (self-contained guide for new developers with escalation path).
+
 ### File List
+
+- `MicroservicesSync/README.md` (modified — added Troubleshooting Unexpected Sync Outcomes section; code review: fixed misleading SQL comment and unsearchable log pattern fragment)
+
+## Change Log
+
+- 2026-03-12: Code review fixes — corrected duplicate task markers (1.6/1.7 appeared as both [x] and [ ]), fixed misleading SQL comment for `SyncedAt IS NULL` query, fixed unsearchable log pattern fragment `all N` → `all <N>` in README log table
+- 2026-03-12: Added "Troubleshooting Unexpected Sync Outcomes" section to README.md — documentation-only, no code changes (Story 3.5)
