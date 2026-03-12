@@ -613,3 +613,158 @@ If you cannot resolve the anomaly after Steps 1–5, capture the following infor
 - The `docker-compose.yml` environment variable section showing current `SyncOptions__MeasurementsPerClient` and `SyncOptions__BatchSize` values.
 
 This package of information gives any developer enough context to reproduce and diagnose the issue independently.
+
+## Architecture Overview
+
+This section explains service responsibilities, data flows, and the sync pattern structure for architects and developers evaluating Microserices-Sync for reuse. For the full set of architectural decisions (ADRs), see the [Architecture Decision Document](../_bmad-output/planning-artifacts/architecture.md) and the [Product Requirements Document](../_bmad-output/planning-artifacts/prd.md).
+
+### High-Level Topology
+
+```mermaid
+graph LR
+  Dev[Developer Machine]
+  Server[ServerService<br/>ASP.NET Core MVC<br/>SQL Server · port 5000]
+  Client1[ClientService User 1<br/>ASP.NET Core MVC<br/>SQLite · port 5001]
+  ClientN[ClientService User N<br/>ASP.NET Core MVC<br/>SQLite · port 500N]
+  SqlServerDB[(SQL Server DB<br/>ServerServiceDb)]
+  SqliteDB1[(SQLite DB 1)]
+  SqliteDBN[(SQLite DB N)]
+
+  Dev --> Server
+  Dev --> Client1
+  Dev --> ClientN
+  Server --> SqlServerDB
+  Client1 --> SqliteDB1
+  ClientN --> SqliteDBN
+  Client1 -- sync HTTP --> Server
+  ClientN -- sync HTTP --> Server
+```
+
+The experiment runs fully locally via `docker-compose`. One `ServerService` container is the central source of truth. Five `ClientService` containers each represent a specific seeded user and maintain their own isolated SQLite database. No external cloud services are required.
+
+### Service Responsibilities
+
+| Service | Primary Responsibilities |
+|---|---|
+| **ServerService** (port 5000) | Stores all reference data (Buildings, Rooms, Surfaces, Cells, Users) and consolidated Measurements. Owns sync endpoints (`/api/v1/sync/measurements/push` and `/api/v1/sync/measurements/pull`). Provides full-CRUD jqGrid views for all entities. Records each sync operation as a `SyncRun` entry. Seeds reference data on startup. |
+| **ClientService** (ports 5001–5005) | Creates measurements locally, pushes them to ServerService, pulls the consolidated dataset back. Full CRUD only for Measurements; all other entities are read-only (populated via reference-data pull). Each instance is bound to one seeded user via `ClientIdentity__UserId`. |
+
+### Key Domain Entities
+
+| Entity | Present in | ServerService | ClientService |
+|---|---|---|---|
+| `Measurement` | Both | Full CRUD | Full CRUD |
+| `User` | Both | Full CRUD | Read-Only |
+| `Building` | Both | Full CRUD | Read-Only |
+| `Room` | Both | Full CRUD | Read-Only |
+| `Surface` | Both | Full CRUD | Read-Only |
+| `Cell` | Both | Full CRUD | Read-Only |
+| `SyncRun` | ServerService only | Full CRUD | — |
+
+All entities use `Guid` primary keys, ensuring uniqueness across services without coordination. Mutable entities carry concurrency tokens: `rowversion` (SQL Server) or a numeric integer (SQLite). Entity classes live in `Sync.Domain` — shared between both services with no persistence-specific code.
+
+### Sync Data Flow
+
+```mermaid
+sequenceDiagram
+  participant C1 as ClientService 1
+  participant CN as ClientService N
+  participant S as ServerService
+  participant DB as SQL Server DB
+
+  C1->>S: GET /api/v1/sync/reference-data (first run)
+  S-->>C1: Buildings, Rooms, Surfaces, Cells, Users
+  CN->>S: GET /api/v1/sync/reference-data (first run)
+  S-->>CN: Buildings, Rooms, Surfaces, Cells, Users
+
+  C1->>C1: Generate measurements (tagged with UserId)
+  CN->>CN: Generate measurements (tagged with UserId)
+
+  C1->>S: POST /api/v1/sync/measurements/push
+  S->>DB: Batch-insert in single transaction
+  CN->>S: POST /api/v1/sync/measurements/push
+  S->>DB: Batch-insert in single transaction
+
+  C1->>S: GET /api/v1/sync/measurements/pull
+  S-->>C1: All measurements (all clients)
+  CN->>S: GET /api/v1/sync/measurements/pull
+  S-->>CN: All measurements (all clients)
+  Note over C1,CN: Convergence confirmed — all clients hold identical measurement sets
+```
+
+A complete sync run follows five phases:
+
+1. **Reference pull (first run only)** — Each ClientService calls ServerService to populate Buildings, Rooms, Surfaces, Cells, and Users. After this initial pull the client database mirrors the server reference data.
+2. **Measurement generation** — Each ClientService generates measurements locally, tagging each record with its own `UserId` GUID.
+3. **Push** — ClientService calls `POST /api/v1/sync/measurements/push`. ServerService inserts all received measurements in configurable-size in-memory batches (default `BatchSize = 5`) within a single database transaction — all batches commit together or the entire push rolls back.
+4. **Pull** — ClientService calls `GET /api/v1/sync/measurements/pull`. Received measurements are applied to the local SQLite database in the same single-transaction, batched pattern.
+5. **Convergence** — After push and pull complete for all clients, every service holds the same full measurement set. The `Verify Convergence` button on each ClientService home page confirms this.
+
+Each sync operation carries an `X-Correlation-Id` HTTP header that ties client-side and server-side log entries together. ServerService records each push/pull as a `SyncRun` row visible in the Sync Runs jqGrid.
+
+### FR/NFR to Implementation Mapping
+
+| Requirement | Implementation | Location |
+|---|---|---|
+| FR1 — one-command startup | `docker-compose up` | `docker-compose.yml` |
+| FR2 — service health checks | `/health` endpoint on every container | `Program.cs` (health checks registration) |
+| FR3 — configurable scenario parameters | `SyncOptions__MeasurementsPerClient`, `SyncOptions__BatchSize` env vars | `docker-compose.yml` |
+| FR4 — database seeding | Startup seeder seeds reference tables on ServerService from CSV data | `Sync.Infrastructure` seeder, `Program.cs` |
+| FR5 — clean baseline reset | `POST /api/v1/admin/reset` + `POST /api/v1/admin/pull-reference-data` | `AdminController` on both services |
+| FR6 — core sync scenario (push/pull) | Batched transactional push+pull endpoints + UI buttons | `SyncController` (ServerService), `HomeController` (ClientService) |
+| FR7 — edge-case scenario variant | Scenario B: 3 clients × 5 measurements × BatchSize=2 (configuration only) | `docker-compose.yml` environment overrides |
+| FR8 — convergence guarantee | GUID deduplication + single-transaction batched operations | `Sync.Application` push/pull services |
+| FR9 — repeatable runs from clean baseline | Idempotent seeding + reset mechanism | `AdminController`, `Sync.Infrastructure` |
+| FR10 — sync run summary view | `SyncRuns` jqGrid on ServerService home page | `SyncRunsController`, `HomeController` |
+| FR11 — data inspection via jqGrid | jqGrid tables on both service home pages + DB inspection guide | `HomeController`, [Direct Database Inspection](#direct-database-inspection) |
+| FR12 — logs and diagnostics | Structured logging with `CorrelationId`/`SyncRunId` per operation | `Sync.Application`, [Viewing Sync Logs](#viewing-sync-logs) |
+| FR13 — README prerequisites + quickstart | Prerequisites and Quick Start sections | README |
+| FR14 — scenario guide | Running Sync Scenarios section | README |
+| FR15 — architecture notes | This section | README |
+| NFR5 — SQL injection prevention | EF Core parameterized queries; whitelisted + LINQ-translated jqGrid params | `Sync.Infrastructure` repositories, API controllers |
+
+### Solution Structure
+
+```
+MicroservicesSync/
+├── ServerService/               ← ASP.NET Core MVC + SQL Server (port 5000)
+│   ├── Controllers/             ← HomeController, entity API controllers, AdminController, SyncController
+│   └── Views/Home/              ← Index.cshtml hosting all jqGrids
+├── ClientService/               ← ASP.NET Core MVC + SQLite (ports 5001–5005)
+│   ├── Controllers/             ← HomeController (sync trigger actions), entity API controllers, AdminController
+│   └── Views/Home/              ← Index.cshtml with Measurements CRUD + sync buttons
+├── Sync.Domain/                 ← Shared entities (Guid PK, concurrency tokens, no persistence code)
+├── Sync.Application/            ← Sync orchestration (push, pull, batching), service interfaces, DTOs
+├── Sync.Infrastructure/         ← EF Core DbContexts (ServerDbContext / ClientDbContext), repositories, seeders
+├── MicroservicesSync.Tests/     ← Integration tests targeting sync convergence and admin flows
+├── docker-compose.yml           ← Full environment: ServerService, 5 × ClientService, sqlserver
+└── docker-compose.override.yml  ← Development-time overrides (port mappings, volume paths)
+```
+
+**Clean/Onion layering (enforced by project references):**
+
+```
+Sync.Domain
+    ↑
+Sync.Application  (references Domain only)
+    ↑
+Sync.Infrastructure  (references Domain + Application)
+    ↑
+ServerService / ClientService  (reference Application + Infrastructure)
+```
+
+No Infrastructure project references web projects. No EF Core calls appear in controllers — all data access is proxied through Application services and repository interfaces.
+
+### Reuse Guidance
+
+To lift the sync pattern into a new project, the following components are the most portable:
+
+| Component | What to copy | Where to find it |
+|---|---|---|
+| Sync orchestration | Push/pull services with single-transaction batching and conflict detection | `Sync.Application` |
+| Repository abstractions | `IReadOnlyRepository<T>` and `IRepository<T>` with jqGrid-friendly `GetPaged` | `Sync.Infrastructure` |
+| Database reset / seed pattern | `AdminController` reset + seeder startup logic for test-environment baselines | `AdminController`, `Sync.Infrastructure` seeders |
+| jqGrid integration | `HomeController` + jqGrid Razor views, per-entity API controller shape | `ServerService/Controllers`, `ServerService/Views/Home` |
+| Docker topology | Multi-service compose file with per-user volumes and environment-variable topology | `docker-compose.yml` |
+
+For detailed architectural rationale and decision records (ADR-001: solution layout, ADR-002: per-user client identity), see the [Architecture Decision Document](../_bmad-output/planning-artifacts/architecture.md).

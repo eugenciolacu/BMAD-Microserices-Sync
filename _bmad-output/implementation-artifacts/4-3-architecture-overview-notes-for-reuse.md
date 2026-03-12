@@ -1,6 +1,6 @@
 # Story 4.3: Architecture Overview Notes for Reuse
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,27 +26,27 @@ so that I can quickly understand service responsibilities, data flows, and sync 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Audit README to confirm insertion point and absence of existing architecture section** (AC: #1, #2, #3)
-  - [ ] 1.1 Open `MicroservicesSync/README.md`. Read the full file from top to bottom.
-  - [ ] 1.2 Confirm the current section order (see Dev Notes for the full table). Specifically verify that `## Troubleshooting Unexpected Sync Outcomes` is the last section and that no `## Architecture` or `## Architecture Overview` section already exists.
-  - [ ] 1.3 If any partial architecture content already exists (e.g., inline notes), note it to avoid duplication — do NOT create a second section.
+- [x] **Task 1: Audit README to confirm insertion point and absence of existing architecture section** (AC: #1, #2, #3)
+  - [x] 1.1 Open `MicroservicesSync/README.md`. Read the full file from top to bottom.
+  - [x] 1.2 Confirm the current section order (see Dev Notes for the full table). Specifically verify that `## Troubleshooting Unexpected Sync Outcomes` is the last section and that no `## Architecture` or `## Architecture Overview` section already exists.
+  - [x] 1.3 If any partial architecture content already exists (e.g., inline notes), note it to avoid duplication — do NOT create a second section.
 
-- [ ] **Task 2: Insert `## Architecture Overview` section at the end of the README** (AC: #1, #2, #3)
-  - [ ] 2.1 Append the new `## Architecture Overview` section **immediately after** the last content line of `## Troubleshooting Unexpected Sync Outcomes` (the "Step 5 — Confirm convergence after fixing" checklist). No other sections are added, modified, reorganized, or deleted.
-  - [ ] 2.2 Write the **High-Level Topology** subsection with the Mermaid `graph LR` diagram (see Dev Notes for exact block). Ensure the diagram uses `graph LR` (not `graph TD`) to match the architecture decision document.
-  - [ ] 2.3 Write the **Service Responsibilities** subsection with the two-column table describing ServerService and ClientService roles.
-  - [ ] 2.4 Write the **Key Domain Entities** subsection with the entity-access table and a note on Guid PKs and concurrency tokens.
-  - [ ] 2.5 Write the **Sync Data Flow** subsection with the Mermaid `sequenceDiagram` block (see Dev Notes for exact block) and the five-phase narrative.
-  - [ ] 2.6 Write the **FR/NFR to Implementation Mapping** subsection with the full three-column table (FR/NFR → Implementation → Where).
-  - [ ] 2.7 Write the **Solution Structure** subsection with the tree-style code block showing all six projects and key files.
-  - [ ] 2.8 Write the **Reuse Guidance** subsection listing which components to lift and adapt.
+- [x] **Task 2: Insert `## Architecture Overview` section at the end of the README** (AC: #1, #2, #3)
+  - [x] 2.1 Append the new `## Architecture Overview` section **immediately after** the last content line of `## Troubleshooting Unexpected Sync Outcomes` (the "Step 5 — Confirm convergence after fixing" checklist). No other sections are added, modified, reorganized, or deleted.
+  - [x] 2.2 Write the **High-Level Topology** subsection with the Mermaid `graph LR` diagram (see Dev Notes for exact block). Ensure the diagram uses `graph LR` (not `graph TD`) to match the architecture decision document.
+  - [x] 2.3 Write the **Service Responsibilities** subsection with the two-column table describing ServerService and ClientService roles.
+  - [x] 2.4 Write the **Key Domain Entities** subsection with the entity-access table and a note on Guid PKs and concurrency tokens.
+  - [x] 2.5 Write the **Sync Data Flow** subsection with the Mermaid `sequenceDiagram` block (see Dev Notes for exact block) and the five-phase narrative.
+  - [x] 2.6 Write the **FR/NFR to Implementation Mapping** subsection with the full three-column table (FR/NFR → Implementation → Where).
+  - [x] 2.7 Write the **Solution Structure** subsection with the tree-style code block showing all six projects and key files.
+  - [x] 2.8 Write the **Reuse Guidance** subsection listing which components to lift and adapt.
 
-- [ ] **Task 3: Final consistency review** (AC: #1, #2, #3)
-  - [ ] 3.1 Read the updated README from top to bottom. Verify the new section reads as a standalone reference that does not duplicate information from earlier sections — cross-reference rather than repeat.
-  - [ ] 3.2 Verify all anchor links inside the new section (e.g., `#direct-database-inspection`, `#viewing-sync-logs`) are valid. GitHub Markdown anchors are lowercase with spaces replaced by hyphens.
-  - [ ] 3.3 Confirm that no `.cs` files, no `Dockerfile`, no `docker-compose.yml`, and no test project files are modified — this is a documentation-only story.
-  - [ ] 3.4 Verify the Mermaid diagrams match exactly the topology described in relevant architecture sections: `ServerService → SqlServerDB`, `ClientService(N) → SqliteDB(N)`, no cross DB connections. Confirm sequence diagram shows reference pull → generation → push → pull → convergence in that order.
-  - [ ] 3.5 Confirm the FR/NFR mapping table covers FR1–FR15 and NFR5 (the non-funcional requirements with direct implementation counterparts) and that each `Where` value names a real controller, project, or file that exists in the solution.
+- [x] **Task 3: Final consistency review** (AC: #1, #2, #3)
+  - [x] 3.1 Read the updated README from top to bottom. Verify the new section reads as a standalone reference that does not duplicate information from earlier sections — cross-reference rather than repeat.
+  - [x] 3.2 Verify all anchor links inside the new section (e.g., `#direct-database-inspection`, `#viewing-sync-logs`) are valid. GitHub Markdown anchors are lowercase with spaces replaced by hyphens.
+  - [x] 3.3 Confirm that no `.cs` files, no `Dockerfile`, no `docker-compose.yml`, and no test project files are modified — this is a documentation-only story.
+  - [x] 3.4 Verify the Mermaid diagrams match exactly the topology described in relevant architecture sections: `ServerService → SqlServerDB`, `ClientService(N) → SqliteDB(N)`, no cross DB connections. Confirm sequence diagram shows reference pull → generation → push → pull → convergence in that order.
+  - [x] 3.5 Confirm the FR/NFR mapping table covers FR1–FR15 and NFR5 (the non-funcional requirements with direct implementation counterparts) and that each `Where` value names a real controller, project, or file that exists in the solution.
 
 ## Dev Notes
 
@@ -290,10 +290,26 @@ No changes to `.cs` files, `Dockerfile`, `docker-compose.yml`, or test project f
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Audited README: confirmed `## Troubleshooting Unexpected Sync Outcomes` was the last section, no existing architecture section.
+- Inserted `## Architecture Overview` section verbatim from story Dev Notes immediately after the closing line of the Troubleshooting section.
+- Section includes: High-Level Topology (Mermaid `graph LR`), Service Responsibilities, Key Domain Entities, Sync Data Flow (Mermaid `sequenceDiagram`), FR/NFR to Implementation Mapping (FR1–FR15 + NFR5), Solution Structure (tree + onion layering), and Reuse Guidance.
+- Verified anchor links `#direct-database-inspection` and `#viewing-sync-logs` resolve to existing headings at lines 277 and 388.
+- No `.cs`, `Dockerfile`, `docker-compose.yml`, or test project files modified — documentation-only story.
+- All 3 acceptance criteria satisfied.
+- **AI Code Review fix (2026-03-12):** Corrected insertion point of `## Architecture Overview` — orphaned Troubleshooting Step 5 item 4, convergence confirmation paragraph, and "When to escalate" block were restored to their correct position before the Architecture Overview heading.
+- **AI Code Review fix (2026-03-12):** Added `Note over C1,CN: Convergence confirmed` to sequence diagram to satisfy Task 3.4 (diagram must show convergence step).
+
+### Change Log
+
+- 2026-03-12: Appended `## Architecture Overview` section to `MicroservicesSync/README.md`. Section covers high-level topology, service responsibilities, key domain entities, sync data flow, FR/NFR-to-implementation mapping, solution structure, and reuse guidance.
+- 2026-03-12: AI Code Review — fixed `## Architecture Overview` insertion point (Troubleshooting section was split; orphaned items 4, convergence confirmation, and "When to escalate" block restored before Architecture heading). Added convergence note to sequence diagram.
+
 ### File List
+
+- MicroservicesSync/README.md
