@@ -63,7 +63,7 @@ development_status:
   # batched operations inside a single transaction per push/pull.
   # FRs covered: FR6, FR7, FR8, FR9
   # ─────────────────────────────────────────────────────────────────────────────
-  epic-2: in-progress
+  epic-2: done
   2-1-client-side-measurement-generation-per-instance: done
   2-2-transactional-batched-server-side-measurement-push: done
   2-3-transactional-batched-client-side-pull-of-consolidated-measurements: done
@@ -78,13 +78,13 @@ development_status:
   # investigate unexpected behavior or edge cases.
   # FRs covered: FR10, FR11, FR12
   # ─────────────────────────────────────────────────────────────────────────────
-  epic-3: in-progress
+  epic-3: done
   3-1-server-side-sync-run-summary-view: done
   3-2-measurement-inspection-via-jqgrid-on-both-services: done
   3-3-direct-database-inspection-support-for-diagnostics: done
   3-4-application-logging-for-sync-operations: done
   3-5-troubleshooting-flow-for-unexpected-sync-outcomes: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Epic 4: Developer Documentation and Guidance
