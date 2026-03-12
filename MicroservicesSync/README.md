@@ -4,13 +4,48 @@ Local development environment for multi-client sync experiments.
 
 ## Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- A `.env` file in this folder containing `SA_PASSWORD=<YourStrong@Passw0rd>`
+| Tool | Version / Note |
+|---|---|
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Latest stable — required to run all services |
+| [Git](https://git-scm.com/) | Any recent version — required to clone the repository |
+| [.NET 10 SDK](https://dotnet.microsoft.com/download) | Required only if running or building outside Docker (optional for Docker-only workflow) |
+| [Visual Studio 2022 (17.12+)](https://visualstudio.microsoft.com/vs/) or [VS Code](https://code.visualstudio.com/) | Required for local debugging outside containers; Visual Studio is the primary dev environment |
+| [SQL Server Management Studio (SSMS)](https://aka.ms/ssms) | Optional — required for Direct Database Inspection of SQL Server |
+| [DB Browser for SQLite](https://sqlitebrowser.org) | Optional — required for Direct Database Inspection of SQLite |
+
+> SSMS and DB Browser are needed only if you want to inspect databases directly (see [Direct Database Inspection](#direct-database-inspection)). They are not required to run the standard Docker scenario.
+
+You will also need a `.env` file in this folder (see Quick Start below) — it is git-ignored and must be created manually on each machine.
 
 ## Quick Start
 
+### Before your first run
+
+1. **Clone the repository** (skip if you already have it locally):
+   ```bash
+   git clone <repository-url>
+   cd <repository-folder>
+   cd MicroservicesSync
+   ```
+
+2. **Create the required `.env` file** in the `MicroservicesSync/` folder (the same folder as `docker-compose.yml`):
+   ```
+   SA_PASSWORD=<YourStrong@Passw0rd>
+   ```
+   Replace `<YourStrong@Passw0rd>` with your chosen SQL Server password.  
+   The password must meet SQL Server's complexity requirements:
+   - At least 8 characters
+   - Contains uppercase letters, lowercase letters, digits, and at least one symbol
+
+   This file is git-ignored and must be created manually on each machine.  
+   Without it, the `sqlserver` container will fail to start because `SA_PASSWORD` is undefined.
+
+### Start the services
+
+> Ensure Docker Desktop is running before executing these commands.
+
 ```bash
-# First run / after code changes
+# First run / after code changes (first run downloads images and may take several minutes)
 docker-compose up --build
 
 # Subsequent runs (images already built)
@@ -43,6 +78,20 @@ docker-compose ps
 
 A ClientService instance will report `{"status":"Unhealthy"}` (HTTP 503) if its
 `ClientIdentity__UserId` environment variable is missing or not a valid GUID.
+
+### Accessing the Service Home Pages
+
+Once all health checks return `{"status":"Healthy"}`, open the service home pages in a browser to confirm the UI and data layer are fully operational (migrations applied, reference data seeded, UI rendering):
+
+| Service | Home Page URL | What you should see |
+|---|---|---|
+| ServerService | http://localhost:5000 | jqGrid tables for Measurements, Buildings, Rooms, Surfaces, Cells, Users, and Sync Runs. On first run: 0 measurements, 5 users, 2 buildings, 4 rooms, 8 surfaces, 16 cells. |
+| ClientService User 1 | http://localhost:5001 | jqGrid tables for Measurements (CRUD) and read-only reference grids. On first run: all tables empty until **Pull Reference Data** is triggered. Sync action buttons: **Generate**, **Push**, **Pull**, **Reset Client DB**, **Pull Reference Data**. |
+| ClientService User 2–5 | http://localhost:5002 through http://localhost:5005 | Same as User 1 (each backed by its own isolated SQLite database). |
+
+> Health endpoint checks (`/health`) confirm container liveness. The home page confirms end-to-end readiness: DB migrations applied, reference data seeded, and UI rendering correctly.
+
+> If ServerService's home page loads but shows 0 rows in all grids with no error, seeding may still be in progress — wait 5–10 seconds and refresh. If tables remain empty after 30 seconds, check the `serverservice-app` logs with `docker logs serverservice-app --tail 30` for seeding errors.
 
 ## Scenario Parameters
 

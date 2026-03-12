@@ -94,7 +94,7 @@ development_status:
   # FRs covered: FR13, FR14, FR15
   # ─────────────────────────────────────────────────────────────────────────────
   epic-4: in-progress
-  4-1-single-entry-readme-with-prerequisites-and-quickstart: ready-for-dev
+  4-1-single-entry-readme-with-prerequisites-and-quickstart: done
   4-2-scenario-guide-for-core-and-edge-case-sync-runs: backlog
   4-3-architecture-overview-notes-for-reuse: backlog
   epic-4-retrospective: optional

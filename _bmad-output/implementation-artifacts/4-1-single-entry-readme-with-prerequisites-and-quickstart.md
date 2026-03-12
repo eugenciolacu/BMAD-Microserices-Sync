@@ -1,6 +1,6 @@
 # Story 4.1: Single-Entry README with Prerequisites and Quickstart
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,33 +26,33 @@ so that I can bring up the environment and run the core scenario without hunting
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Audit the current README structure and identify gaps** (AC: #1, #2, #3)
-  - [ ] 1.1 Open `MicroservicesSync/README.md`. Read the full file from top to bottom.
-  - [ ] 1.2 Note: the README already has substantial content from Epics 1–3. This story is **audit, complete, and integrate** — NOT rewrite from scratch. Preserve all existing sections exactly as written: Reset to Clean Baseline, Running Tests, Direct Database Inspection, Viewing Sync Logs, Troubleshooting Unexpected Sync Outcomes.
-  - [ ] 1.3 Identify the three concrete gaps against the ACs (detailed in Dev Notes).
+- [x] **Task 1: Audit the current README structure and identify gaps** (AC: #1, #2, #3)
+  - [x] 1.1 Open `MicroservicesSync/README.md`. Read the full file from top to bottom.
+  - [x] 1.2 Note: the README already has substantial content from Epics 1–3. This story is **audit, complete, and integrate** — NOT rewrite from scratch. Preserve all existing sections exactly as written: Reset to Clean Baseline, Running Tests, Direct Database Inspection, Viewing Sync Logs, Troubleshooting Unexpected Sync Outcomes.
+  - [x] 1.3 Identify the three concrete gaps against the ACs (detailed in Dev Notes).
 
-- [ ] **Task 2: Enhance the Prerequisites section** (AC: #1)
-  - [ ] 2.1 Locate the `## Prerequisites` section at the top of `README.md`. It currently lists only Docker Desktop and a `.env` file.
-  - [ ] 2.2 Replace the Prerequisites section with an expanded version that lists all required tools with versions. See Dev Notes for the exact required list.
-  - [ ] 2.3 Ensure the `.env` file requirement is retained and its purpose is clearly stated.
+- [x] **Task 2: Enhance the Prerequisites section** (AC: #1)
+  - [x] 2.1 Locate the `## Prerequisites` section at the top of `README.md`. It currently lists only Docker Desktop and a `.env` file.
+  - [x] 2.2 Replace the Prerequisites section with an expanded version that lists all required tools with versions. See Dev Notes for the exact required list.
+  - [x] 2.3 Ensure the `.env` file requirement is retained and its purpose is clearly stated.
 
-- [ ] **Task 3: Enhance the Quick Start section to include clone and .env setup steps** (AC: #2)
-  - [ ] 3.1 Locate the `## Quick Start` section. It currently starts directly with `docker-compose up --build` — there is no `git clone` step.
-  - [ ] 3.2 Add a `git clone` step as the first step in the Quick Start sequence (before docker-compose commands). Use a placeholder repo URL since the actual remote URL may vary per developer.
-  - [ ] 3.3 Add an explicit `.env` file creation step immediately after clone (before docker-compose). The step must explain what the file must contain (`SA_PASSWORD=<YourStrong@Passw0rd>`), what the password constraints are (SQL Server strong password policy), and where the file must be placed (`MicroservicesSync/` folder, alongside `docker-compose.yml`).
-  - [ ] 3.4 Retain the existing docker-compose commands (`docker-compose up --build`, `docker-compose up`, `docker-compose down`) unchanged — they are correct and well-established.
+- [x] **Task 3: Enhance the Quick Start section to include clone and .env setup steps** (AC: #2)
+  - [x] 3.1 Locate the `## Quick Start` section. It currently starts directly with `docker-compose up --build` — there is no `git clone` step.
+  - [x] 3.2 Add a `git clone` step as the first step in the Quick Start sequence (before docker-compose commands). Use a placeholder repo URL since the actual remote URL may vary per developer.
+  - [x] 3.3 Add an explicit `.env` file creation step immediately after clone (before docker-compose). The step must explain what the file must contain (`SA_PASSWORD=<YourStrong@Passw0rd>`), what the password constraints are (SQL Server strong password policy), and where the file must be placed (`MicroservicesSync/` folder, alongside `docker-compose.yml`).
+  - [x] 3.4 Retain the existing docker-compose commands (`docker-compose up --build`, `docker-compose up`, `docker-compose down`) unchanged — they are correct and well-established.
 
-- [ ] **Task 4: Add home page navigation step to the health verification section** (AC: #3)
-  - [ ] 4.1 Locate the `## Verifying the Environment is Healthy` section. It documents the `/health` endpoint table and `docker-compose ps` — but it does NOT mention navigating to the service home pages.
-  - [ ] 4.2 Add a paragraph or subsection **after** the health endpoint table that directs the developer to open the service home pages in a browser:
+- [x] **Task 4: Add home page navigation step to the health verification section** (AC: #3)
+  - [x] 4.1 Locate the `## Verifying the Environment is Healthy` section. It documents the `/health` endpoint table and `docker-compose ps` — but it does NOT mention navigating to the service home pages.
+  - [x] 4.2 Add a paragraph or subsection **after** the health endpoint table that directs the developer to open the service home pages in a browser:
     - ServerService: `http://localhost:5000` — expect the main jqGrid interface with Measurements, Buildings, Rooms, Surfaces, Cells, Users, and Sync Runs grids.
     - Each ClientService instance: `http://localhost:5001` through `http://localhost:5005` — expect the main jqGrid interface with read-only reference data grids and Measurements CRUD + sync actions (Generate, Push, Pull, Reset Client DB, Pull Reference Data buttons).
-  - [ ] 4.3 Frame this step as completing the "environment started successfully" confirmation — health endpoints confirm the process is alive; the home page confirms the UI and data layer is working.
+  - [x] 4.3 Frame this step as completing the "environment started successfully" confirmation — health endpoints confirm the process is alive; the home page confirms the UI and data layer is working.
 
-- [ ] **Task 5: Final consistency review** (AC: #1, #2, #3)
-  - [ ] 5.1 Read the updated README from top to bottom and verify the flow makes logical sense for a developer picking up the project for the first time: Prerequisites → Clone → Create .env → Start services → Health check → Open home pages → then the rest of the existing sections.
-  - [ ] 5.2 Verify no duplicate tool mentions between the new Prerequisites section and the existing "Direct Database Inspection" section (which separately documents SSMS and DB Browser for SQLite with detailed connection steps). The Prerequisites section should list the tool and version; the Deep-dive sections provide usage details — no duplication needed.
-  - [ ] 5.3 Do NOT reorganize or restructure the body of the README beyond the three targeted changes above. Do NOT modify: any `.cs` files, `Dockerfiles`, `docker-compose.yml`, `docker-compose.override.yml`, test projects, or migration files. This is a documentation-only story.
+- [x] **Task 5: Final consistency review** (AC: #1, #2, #3)
+  - [x] 5.1 Read the updated README from top to bottom and verify the flow makes logical sense for a developer picking up the project for the first time: Prerequisites → Clone → Create .env → Start services → Health check → Open home pages → then the rest of the existing sections.
+  - [x] 5.2 Verify no duplicate tool mentions between the new Prerequisites section and the existing "Direct Database Inspection" section (which separately documents SSMS and DB Browser for SQLite with detailed connection steps). The Prerequisites section should list the tool and version; the Deep-dive sections provide usage details — no duplication needed.
+  - [x] 5.3 Do NOT reorganize or restructure the body of the README beyond the three targeted changes above. Do NOT modify: any `.cs` files, `Dockerfiles`, `docker-compose.yml`, `docker-compose.override.yml`, test projects, or migration files. This is a documentation-only story.
 
 ## Dev Notes
 
@@ -182,12 +182,44 @@ This story is scoped accordingly: **three targeted additions** to the existing R
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.6 (GitHub Copilot)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Audited `MicroservicesSync/README.md` — confirmed substantial content already in place from Epics 1–3. Scoped implementation to three targeted additions only.
+- **Gap 1 (Prerequisites):** Replaced minimal 2-bullet Prerequisites section with a full table listing Docker Desktop, Git, .NET 10 SDK, Visual Studio 2022/VS Code, SSMS (optional), and DB Browser for SQLite (optional). Added note directing to Direct Database Inspection section for detail and retained `.env` file requirement with explanation.
+- **Gap 2 (Quick Start):** Added `### Before your first run` subsection before docker-compose commands with `git clone` placeholder step and explicit `.env` file creation step including SQL Server password complexity requirements. Existing docker-compose commands unchanged.
+- **Gap 3 (Health Verification):** Added `### Accessing the Service Home Pages` subsection after the existing health endpoint table, with a table showing all 6 service home page URLs, expected content on first run, and explanatory note distinguishing liveness check (`/health`) from end-to-end readiness (home page).
+- No `.cs`, `Dockerfile`, `docker-compose.yml`, `docker-compose.override.yml`, test project, or migration files modified. Documentation-only story.
+
 ### File List
 
-- `MicroservicesSync/README.md`
+- `MicroservicesSync/README.md` — modified: expanded Prerequisites table, added Before-your-first-run preamble to Quick Start, added Accessing the Service Home Pages subsection to Verifying the Environment is Healthy.
+
+## Senior Developer Review (AI)
+
+**Reviewer:** GitHub Copilot (Claude Sonnet 4.6) — 2026-03-12  
+**Outcome:** ✅ Approved with fixes applied
+
+**Issues found and fixed (6 total — 0 HIGH, 2 MEDIUM, 4 LOW):**
+
+| # | Severity | Issue | Fix Applied |
+|---|---|---|---|
+| 1 | MEDIUM | Clone sequence: `cd MicroservicesSync` immediately after `git clone` fails — missing intermediate `cd <repository-folder>` step | Added `cd <repository-folder>` before `cd MicroservicesSync` |
+| 2 | MEDIUM | Visual Studio row in Prerequisites table lacked hyperlinks (every other tool had one) | Added links to visualstudio.microsoft.com and code.visualstudio.com |
+| 3 | LOW | VS 2022 minimum version listed as `17.8+` — .NET 10 requires 17.12+ | Updated to `(17.12+)` |
+| 4 | LOW | `http://localhost:5002 – 5005` is not a valid URL in the Home Pages table | Changed to `http://localhost:5002 through http://localhost:5005` |
+| 5 | LOW | No note that Docker Desktop must be running before `docker-compose` commands | Added `> Ensure Docker Desktop is running` note before Start the services block |
+| 6 | LOW | No first-run timing warning on `docker-compose up --build` | Added `(first run downloads images and may take several minutes)` to comment |
+
+All three ACs verified as implemented. No HIGH issues found. All MEDIUM and LOW issues fixed directly in `MicroservicesSync/README.md`.
+
+### Change Log
+
+| Date | Change | Reason |
+|---|---|---|
+| 2026-03-12 | Expanded Prerequisites section from 2 bullets to full tool table (Docker Desktop, Git, .NET 10 SDK, Visual Studio 2022, SSMS optional, DB Browser optional) | AC #1: prerequisites must list required tools and versions |
+| 2026-03-12 | Added `### Before your first run` preamble to Quick Start with `git clone` and `.env` creation steps | AC #2: developer must be able to clone, configure env vars, and start services following quickstart |
+| 2026-03-12 | Added `### Accessing the Service Home Pages` subsection to Verifying the Environment is Healthy with URL table for all 6 services | AC #3: developer must be able to reach service home pages and confirm basic health |
