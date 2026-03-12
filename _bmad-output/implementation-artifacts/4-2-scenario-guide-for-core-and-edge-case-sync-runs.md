@@ -1,6 +1,6 @@
 # Story 4.2: Scenario Guide for Core and Edge-Case Sync Runs
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,22 +26,22 @@ so that I know exactly which steps to execute and how to verify outcomes.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Audit README to confirm insertion point** (AC: #1, #2, #3)
-  - [ ] 1.1 Open `MicroservicesSync/README.md`. Read the full file from top to bottom.
-  - [ ] 1.2 Confirm the section order: Prerequisites → Quick Start → Verifying the Environment is Healthy → Scenario Parameters → Reset to Clean Baseline → Running Tests → Direct Database Inspection → Viewing Sync Logs → Troubleshooting Unexpected Sync Outcomes.
-  - [ ] 1.3 Confirm there is **no existing** "Running Sync Scenarios" or similar scenario guide section. If any partial scenario content exists, note it rather than duplicating.
+- [x] **Task 1: Audit README to confirm insertion point** (AC: #1, #2, #3)
+  - [x] 1.1 Open `MicroservicesSync/README.md`. Read the full file from top to bottom.
+  - [x] 1.2 Confirm the section order: Prerequisites → Quick Start → Verifying the Environment is Healthy → Scenario Parameters → Reset to Clean Baseline → Running Tests → Direct Database Inspection → Viewing Sync Logs → Troubleshooting Unexpected Sync Outcomes.
+  - [x] 1.3 Confirm there is **no existing** "Running Sync Scenarios" or similar scenario guide section. If any partial scenario content exists, note it rather than duplicating.
 
-- [ ] **Task 2: Insert "Running Sync Scenarios" section** (AC: #1, #2, #3)
-  - [ ] 2.1 Insert a new `## Running Sync Scenarios` section **immediately after** the `## Reset to Clean Baseline` section and **before** the `## Running Tests` section. See Dev Notes for the exact content.
-  - [ ] 2.2 Write the **Scenario A** subsection: standard 5-client × 10-measurement sync run. See Dev Notes for exact steps, expected outcomes, and API alternatives.
-  - [ ] 2.3 Write the **Scenario B** subsection: edge-case 3-client × 5-measurement reduced-volume variant (BatchSize=2). See Dev Notes for exact steps, configuration instructions, and revert guidance.
-  - [ ] 2.4 Cross-reference (do NOT duplicate) existing README sections for deep verification: link to `#reset-to-clean-baseline`, `#direct-database-inspection`, `#viewing-sync-logs`, and `#troubleshooting-unexpected-sync-outcomes`.
+- [x] **Task 2: Insert "Running Sync Scenarios" section** (AC: #1, #2, #3)
+  - [x] 2.1 Insert a new `## Running Sync Scenarios` section **immediately after** the `## Reset to Clean Baseline` section and **before** the `## Running Tests` section. See Dev Notes for the exact content.
+  - [x] 2.2 Write the **Scenario A** subsection: standard 5-client × 10-measurement sync run. See Dev Notes for exact steps, expected outcomes, and API alternatives.
+  - [x] 2.3 Write the **Scenario B** subsection: edge-case 3-client × 5-measurement reduced-volume variant (BatchSize=2). See Dev Notes for exact steps, configuration instructions, and revert guidance.
+  - [x] 2.4 Cross-reference (do NOT duplicate) existing README sections for deep verification: link to `#reset-to-clean-baseline`, `#direct-database-inspection`, `#viewing-sync-logs`, and `#troubleshooting-unexpected-sync-outcomes`.
 
-- [ ] **Task 3: Final consistency review** (AC: #1, #2, #3)
-  - [ ] 3.1 Read the updated README from top to bottom as a first-time developer would. Verify the flow: Prerequisites → Quick Start → Health check → Parameters → **Reset** → **Scenarios** → Tests → Deep diagnostics reads logically.
-  - [ ] 3.2 Verify all anchor links in the new section are correct (e.g., `#reset-to-clean-baseline`, `#direct-database-inspection`). GitHub Markdown anchors are lowercase with spaces replaced by hyphens.
-  - [ ] 3.3 Check that no curl commands or step sequences are duplicated from the "Reset to Clean Baseline" section.
-  - [ ] 3.4 Confirm this is a **documentation-only story**: no `.cs` files, no `Dockerfiles`, no `docker-compose.yml` (the edge-case scenario explains how to temporarily edit it — the story file itself does NOT make those edits), no test project files modified.
+- [x] **Task 3: Final consistency review** (AC: #1, #2, #3)
+  - [x] 3.1 Read the updated README from top to bottom as a first-time developer would. Verify the flow: Prerequisites → Quick Start → Health check → Parameters → **Reset** → **Scenarios** → Tests → Deep diagnostics reads logically.
+  - [x] 3.2 Verify all anchor links in the new section are correct (e.g., `#reset-to-clean-baseline`, `#direct-database-inspection`). GitHub Markdown anchors are lowercase with spaces replaced by hyphens.
+  - [x] 3.3 Check that no curl commands or step sequences are duplicated from the "Reset to Clean Baseline" section.
+  - [x] 3.4 Confirm this is a **documentation-only story**: no `.cs` files, no `Dockerfiles`, no `docker-compose.yml` (the edge-case scenario explains how to temporarily edit it — the story file itself does NOT make those edits), no test project files modified.
 
 ## Dev Notes
 
@@ -281,4 +281,19 @@ Claude Sonnet 4.6 (GitHub Copilot)
 
 ### Completion Notes List
 
+- Inserted `## Running Sync Scenarios` section into `MicroservicesSync/README.md` immediately after `## Reset to Clean Baseline` and before `## Running Tests`.
+- Scenario A (5 clients × 10 measurements × batch 5): 5-step numbered sequence covering reset, generate, push, pull, and convergence verification with UI button paths and API alternatives.
+- Scenario B (3 clients × 5 measurements × batch 2): edge-case variant with docker-compose.yml configuration instructions, targeted reset steps for clients 1–3, full push/pull/verify sequence, and revert guidance.
+- All cross-references use anchor links (`#reset-to-clean-baseline`, `#verifying-the-environment-is-healthy`, `#direct-database-inspection`, `#troubleshooting-unexpected-sync-outcomes`); no content was duplicated from existing sections.
+- **Verify Convergence** button output `✓ Converged: this client has N measurements, server has N.` confirmed against actual ClientService UI code.
+- Documentation-only: no `.cs`, Docker, `docker-compose.yml`, or test project files modified.
+- **Code review fixes (2026-03-12):** corrected Scenario B Step 2 to use a Reset to Clean Baseline link instead of duplicated curl commands (scope guard fix + ServerService reset gap); added `#viewing-sync-logs` cross-reference to Scenario A Step 5 footer (task 2.4 completion); split prerequisites note into separate Scenario A and Scenario B entries to eliminate contradiction with Scenario B's `docker-compose down` first action.
+
 ### File List
+
+- `MicroservicesSync/README.md` — inserted `## Running Sync Scenarios` section (Scenario A and Scenario B)
+
+### Change Log
+
+- 2026-03-12: Inserted `## Running Sync Scenarios` section into README with Scenario A (standard 5-client × 10-measurement run) and Scenario B (edge-case 3-client × 5-measurement × BatchSize=2 variant). Documentation-only change.
+- 2026-03-12: Code review fixes — Scenario B Step 2 rewritten to reference Reset to Clean Baseline (removes duplicated curl commands and adds missing ServerService reset); added `#viewing-sync-logs` link to Scenario A Step 5 footer; split prerequisites note into per-scenario entries.
