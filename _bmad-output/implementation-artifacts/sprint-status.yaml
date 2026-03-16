@@ -98,3 +98,11 @@ development_status:
   4-2-scenario-guide-for-core-and-edge-case-sync-runs: done
   4-3-architecture-overview-notes-for-reuse: done
   epic-4-retrospective: done
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Epic 5: Maintenance and Completeness Fixes
+  # Address gaps discovered after initial implementation: ensure reset operations
+  # fully clear all tables, including those added by later stories.
+  # ─────────────────────────────────────────────────────────────────────────────
+  epic-5: in-progress
+  5-1-update-reset-to-baseline: done

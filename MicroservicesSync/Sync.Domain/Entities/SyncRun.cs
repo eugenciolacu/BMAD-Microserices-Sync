@@ -11,6 +11,9 @@ public class SyncRun
     public string Status { get; set; } = string.Empty;   // "success" | "failed"
     public string? ErrorMessage { get; set; }      // null on success; set on failure
 
+    // Concurrency token — mapped as rowversion on SQL Server, ignored/replaced on SQLite.
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
     // Navigation (optional; null for pull runs which have no single user identity)
     public User? User { get; set; }
 }

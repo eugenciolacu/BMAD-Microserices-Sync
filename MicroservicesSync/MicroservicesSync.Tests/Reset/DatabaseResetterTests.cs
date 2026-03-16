@@ -93,6 +93,18 @@ public class DatabaseResetterTests : IDisposable
             new Measurement { Id = Guid.NewGuid(), Value = 1.0m, RecordedAt = DateTime.UtcNow, UserId = userId, CellId = cellId },
             new Measurement { Id = Guid.NewGuid(), Value = 2.0m, RecordedAt = DateTime.UtcNow, UserId = userId, CellId = cellId },
         });
+        await db.SyncRuns.AddRangeAsync(new[]
+        {
+            new SyncRun
+            {
+                Id = Guid.NewGuid(),
+                OccurredAt = DateTime.UtcNow,
+                RunType = "push",
+                UserId = userId,
+                MeasurementCount = 2,
+                Status = "success"
+            }
+        });
         await db.SaveChangesAsync();
     }
 
@@ -133,6 +145,7 @@ public class DatabaseResetterTests : IDisposable
         await SeedServerWithMeasurementsAsync(_serverDb);
         Assert.Equal(2, await _serverDb.Measurements.CountAsync());
         Assert.Equal(5, await _serverDb.Users.CountAsync());
+        Assert.Equal(1, await _serverDb.SyncRuns.CountAsync());
 
         // Act
         await DatabaseResetter.ResetServerAsync(_serverDb);
@@ -144,6 +157,7 @@ public class DatabaseResetterTests : IDisposable
         Assert.Equal(4, await _serverDb.Rooms.CountAsync());
         Assert.Equal(8, await _serverDb.Surfaces.CountAsync());
         Assert.Equal(16, await _serverDb.Cells.CountAsync());
+        Assert.Equal(0, await _serverDb.SyncRuns.CountAsync());
     }
 
     [Fact]
@@ -151,6 +165,7 @@ public class DatabaseResetterTests : IDisposable
     {
         // Arrange: seed and add measurements
         await SeedServerWithMeasurementsAsync(_serverDb);
+        Assert.Equal(1, await _serverDb.SyncRuns.CountAsync());
 
         // Act: reset twice
         await DatabaseResetter.ResetServerAsync(_serverDb);
@@ -163,6 +178,7 @@ public class DatabaseResetterTests : IDisposable
         Assert.Equal(4, await _serverDb.Rooms.CountAsync());
         Assert.Equal(8, await _serverDb.Surfaces.CountAsync());
         Assert.Equal(16, await _serverDb.Cells.CountAsync());
+        Assert.Equal(0, await _serverDb.SyncRuns.CountAsync());
     }
 
     [Fact]
@@ -178,6 +194,7 @@ public class DatabaseResetterTests : IDisposable
         Assert.Equal(5, await _serverDb.Users.CountAsync());
         Assert.Equal(2, await _serverDb.Buildings.CountAsync());
         Assert.Equal(16, await _serverDb.Cells.CountAsync());
+        Assert.Equal(0, await _serverDb.SyncRuns.CountAsync());
     }
 
     // ── ResetClientAsync tests ────────────────────────────────────────────────

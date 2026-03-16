@@ -5,13 +5,13 @@ namespace Sync.Infrastructure.Data;
 /// <summary>
 /// Resets ServerService and ClientService databases to clean baseline state.
 /// Uses EF Core ExecuteDeleteAsync for bulk deletes (no entity loading).
-/// FK-safe deletion order is enforced: Measurements → Cells → Surfaces → Rooms → Buildings → Users.
+/// FK-safe deletion order is enforced: Measurements → SyncRuns → Cells → Surfaces → Rooms → Buildings → Users.
 /// </summary>
 public static class DatabaseResetter
 {
     /// <summary>
     /// Clears all data from ServerService SQL Server database and re-seeds reference data.
-    /// After completion: 5 Users, 2 Buildings, 4 Rooms, 8 Surfaces, 16 Cells, 0 Measurements.
+    /// After completion: 5 Users, 2 Buildings, 4 Rooms, 8 Surfaces, 16 Cells, 0 Measurements, 0 SyncRuns.
     /// </summary>
     public static async Task ResetServerAsync(ServerDbContext db, CancellationToken cancellationToken = default)
     {
@@ -19,6 +19,7 @@ public static class DatabaseResetter
 
         // FK-safe bulk deletes (no entity loading — O(1) SQL DELETE FROM statements)
         await db.Measurements.ExecuteDeleteAsync(cancellationToken);
+        await db.SyncRuns.ExecuteDeleteAsync(cancellationToken);
         await db.Cells.ExecuteDeleteAsync(cancellationToken);
         await db.Surfaces.ExecuteDeleteAsync(cancellationToken);
         await db.Rooms.ExecuteDeleteAsync(cancellationToken);
