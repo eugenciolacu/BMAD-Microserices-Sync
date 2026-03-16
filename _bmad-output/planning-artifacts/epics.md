@@ -103,6 +103,10 @@ Enable developers to see what happened during sync: view summaries of sync runs,
 Enable developers and architects to quickly understand how to install, run, and reason about Microserices-Sync through a single README that covers quickstart, scenarios, and architecture notes.
 **FRs covered:** FR13, FR14, FR15
 
+### Epic 5: Polishing
+Addresses targeted defects and incremental improvements discovered after the initial implementation (Epics 1–4). Intended for fixes, workflow corrections, and small enhancements — not originally planned scope.
+**Stories:** 5.1 (Reset to Baseline completeness), 5.2 (Serilog file logging). Additional stories may be added as further improvements are identified.
+
 ## Epic 1: Environment, Seeding, and Reset Baseline
 
 Enable developers to clone the repo, bring up all services via a simple command, configure scenario parameters, and initialize/reset all databases to a known baseline so experiments start from a consistent state.
@@ -478,3 +482,46 @@ So that I can quickly understand service responsibilities, data flows, and sync 
 **Given** a new architect or developer joins the team
 **When** they read the README’s architecture section and follow the links to deeper documents (such as the PRD and architecture decision doc)
 **Then** they can explain back the core design and sync pattern within a short onboarding session without needing to read the entire codebase first.
+## Epic 5: Polishing
+
+Addresses targeted defects and incremental improvements discovered after the initial implementation of Epics 1–4. Epic 5 is the designated vehicle for fixes, workflow corrections, and small enhancements that arise during or after main sprint execution — not planned scope, but necessary for correctness and operational quality.
+
+### Story 5.1: Update Reset to Baseline Completeness
+
+As a developer,
+I want the "Reset to Baseline" button on ServerService and the "Reset Client DB" button on ClientService to fully clear all data from their respective databases,
+So that the reset operation leaves no stale data behind regardless of which tables were added after the initial reset implementation.
+
+**Acceptance Criteria:**
+
+**Given** the system has accumulated sync history (SyncRuns records) and measurement data
+**When** I click "Reset to Baseline" on ServerService
+**Then** the ServerService SQL Server database is fully cleared — including the SyncRuns table — and then reseeded with reference data, leaving zero orphaned records in any table.
+
+**Given** a ClientService instance has accumulated data
+**When** I click "Reset Client DB" on that ClientService instance
+**Then** all tables in the ClientService SQLite database are fully cleared (ClientService does not have a SyncRuns table; the existing delete sequence covers all its tables).
+
+**Given** new tables are added to the schema in a future story
+**When** the developer implements the new entity
+**Then** the same story must include an update to `DatabaseResetter` adding the new table to the correct FK-safe deletion order so this pattern is maintained.
+
+### Story 5.2: Serilog File Logging
+
+As a developer,
+I want both ServerService and ClientService to write structured logs to rolling daily files in the mounted `/app/logs` Docker volume,
+So that I can inspect persistent log history after a container restart and correlate log entries with sync operations across multiple runs.
+
+**Acceptance Criteria:**
+
+**Given** the environment is running via docker-compose
+**When** a sync operation, reset, startup event, or any log-worthy activity occurs on either service
+**Then** log entries are written to a rolling daily file under the service container's `/app/logs` volume in addition to the existing console output.
+
+**Given** I inspect the log files written to a Docker volume (e.g., by mounting it locally or using `docker cp`)
+**When** I open a log file for ServerService or any ClientService instance
+**Then** I see timestamped, levelled, structured entries including source context, message, and exception details on failure.
+
+**Given** Serilog file logging is configured
+**When** the service is also producing output to stdout
+**Then** `docker-compose logs` still shows full console output — the Serilog Console sink is active alongside the file sink.
