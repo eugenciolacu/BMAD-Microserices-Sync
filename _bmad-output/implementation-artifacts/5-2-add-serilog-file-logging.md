@@ -1,6 +1,6 @@
 # Story 5.2: Serilog File Logging
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -37,27 +37,27 @@ These volumes are mounted but unused — no file sink has been configured. This 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Add Serilog NuGet packages to `ServerService/ServerService.csproj`** (AC: #1, #2, #3)
-  - [ ] 1.1 Add the following `PackageReference` entries to the existing `<ItemGroup>` containing package references:
+- [x] **Task 1: Add Serilog NuGet packages to `ServerService/ServerService.csproj`** (AC: #1, #2, #3)
+  - [x] 1.1 Add the following `PackageReference` entries to the existing `<ItemGroup>` containing package references:
     ```xml
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     ```
     `Serilog.AspNetCore` transitively includes `Serilog.Sinks.Console` so no separate console-sink package is needed.
 
-- [ ] **Task 2: Add Serilog NuGet packages to `ClientService/ClientService.csproj`** (AC: #1, #2, #3)
-  - [ ] 2.1 Add the same two package references as Task 1 (`Serilog.AspNetCore 10.0.0` and `Serilog.Sinks.File 7.0.0`) to the existing `<ItemGroup>` containing packages in `ClientService.csproj`.
+- [x] **Task 2: Add Serilog NuGet packages to `ClientService/ClientService.csproj`** (AC: #1, #2, #3)
+  - [x] 2.1 Add the same two package references as Task 1 (`Serilog.AspNetCore 10.0.0` and `Serilog.Sinks.File 7.0.0`) to the existing `<ItemGroup>` containing packages in `ClientService.csproj`.
 
-- [ ] **Task 3: Configure Serilog in `ServerService/Program.cs`** (AC: #1, #2, #3, #4)
-  - [ ] 3.1 Add `using Serilog;` at the top of `ServerService/Program.cs`.
-  - [ ] 3.2 **Before** the `var builder = WebApplication.CreateBuilder(args);` line, add a bootstrap logger that captures any startup errors before the full Serilog configuration is loaded:
+- [x] **Task 3: Configure Serilog in `ServerService/Program.cs`** (AC: #1, #2, #3, #4)
+  - [x] 3.1 Add `using Serilog;` at the top of `ServerService/Program.cs`.
+  - [x] 3.2 **Before** the `var builder = WebApplication.CreateBuilder(args);` line, add a bootstrap logger that captures any startup errors before the full Serilog configuration is loaded:
     ```csharp
     Log.Logger = new LoggerConfiguration()
         .WriteTo.Console()
         .CreateBootstrapLogger();
     ```
-  - [ ] 3.3 **Remove** the existing `builder.Logging.AddSimpleConsole(...)` block (all 5 lines from `builder.Logging.AddSimpleConsole(options =>` to the closing `});`).
-  - [ ] 3.4 **Add** the following immediately after `var builder = WebApplication.CreateBuilder(args);`:
+  - [x] 3.3 **Remove** the existing `builder.Logging.AddSimpleConsole(...)` block (all 5 lines from `builder.Logging.AddSimpleConsole(options =>` to the closing `});`).
+  - [x] 3.4 **Add** the following immediately after `var builder = WebApplication.CreateBuilder(args);`:
     ```csharp
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -65,21 +65,21 @@ These volumes are mounted but unused — no file sink has been configured. This 
         .Enrich.FromLogContext());
     ```
     This reads the full Serilog configuration (sinks, levels, enrichers) from `appsettings.json`.
-  - [ ] 3.5 At the **very end** of `Program.cs`, after `app.Run();`, add:
+  - [x] 3.5 At the **very end** of `Program.cs`, after `app.Run();`, add:
     ```csharp
     Log.CloseAndFlush();
     ```
     This ensures buffered file sink entries are flushed on graceful shutdown.
 
-- [ ] **Task 4: Configure Serilog in `ClientService/Program.cs`** (AC: #1, #2, #3, #4)
-  - [ ] 4.1 Add `using Serilog;` at the top of `ClientService/Program.cs`.
-  - [ ] 4.2 Add bootstrap logger **before** `var builder = WebApplication.CreateBuilder(args);` (same as Task 3.2).
-  - [ ] 4.3 **Remove** the existing `builder.Logging.AddSimpleConsole(...)` block (same as Task 3.3).
-  - [ ] 4.4 **Add** `builder.Host.UseSerilog(...)` immediately after `var builder = WebApplication.CreateBuilder(args);` (same as Task 3.4).
-  - [ ] 4.5 Add `Log.CloseAndFlush();` at the very end of `Program.cs` after `app.Run();` (same as Task 3.5).
+- [x] **Task 4: Configure Serilog in `ClientService/Program.cs`** (AC: #1, #2, #3, #4)
+  - [x] 4.1 Add `using Serilog;` at the top of `ClientService/Program.cs`.
+  - [x] 4.2 Add bootstrap logger **before** `var builder = WebApplication.CreateBuilder(args);` (same as Task 3.2).
+  - [x] 4.3 **Remove** the existing `builder.Logging.AddSimpleConsole(...)` block (same as Task 3.3).
+  - [x] 4.4 **Add** `builder.Host.UseSerilog(...)` immediately after `var builder = WebApplication.CreateBuilder(args);` (same as Task 3.4).
+  - [x] 4.5 Add `Log.CloseAndFlush();` at the very end of `Program.cs` after `app.Run();` (same as Task 3.5).
 
-- [ ] **Task 5: Add Serilog configuration section to `ServerService/appsettings.json`** (AC: #1, #2, #3, #4)
-  - [ ] 5.1 Add a `"Serilog"` top-level key to `ServerService/appsettings.json`. The existing `"Logging"` key can remain for any non-Serilog components that still read it, but Serilog will use its own section. Place the Serilog section after `"AllowedHosts"`:
+- [x] **Task 5: Add Serilog configuration section to `ServerService/appsettings.json`** (AC: #1, #2, #3, #4)
+  - [x] 5.1 Add a `"Serilog"` top-level key to `ServerService/appsettings.json`. The existing `"Logging"` key can remain for any non-Serilog components that still read it, but Serilog will use its own section. Place the Serilog section after `"AllowedHosts"`:
     ```json
     "Serilog": {
       "MinimumLevel": {
@@ -113,8 +113,8 @@ These volumes are mounted but unused — no file sink has been configured. This 
     ```
     **Path note:** `"path": "logs/serverservice-.log"` is relative to the working directory. In Docker the working directory is `/app`, so the file is written to `/app/logs/serverservice-YYYYMMDD.log` — the volume-mounted path. Locally (running from Visual Studio), logs appear in the project's `bin/Debug/net10.0/logs/` folder. The `-` before the extension is the Serilog rolling-interval date suffix placeholder.
 
-- [ ] **Task 6: Add Serilog configuration section to `ClientService/appsettings.json`** (AC: #1, #2, #3, #4)
-  - [ ] 6.1 Add an identical `"Serilog"` section to `ClientService/appsettings.json`, with the file sink path changed to:
+- [x] **Task 6: Add Serilog configuration section to `ClientService/appsettings.json`** (AC: #1, #2, #3, #4)
+  - [x] 6.1 Add an identical `"Serilog"` section to `ClientService/appsettings.json`, with the file sink path changed to:
     ```json
     "path": "logs/clientservice-.log"
     ```
@@ -129,3 +129,58 @@ These volumes are mounted but unused — no file sink has been configured. This 
 - The existing `"Logging"` section in `appsettings.json` is not removed. It serves as a fallback for any framework components that may still read from it (e.g., health checks). Having both sections is harmless.
 - **Docker:** The rolling file name will be `serverservice-20260316.log` for a run on 2026-03-16. After 7 days, older files are automatically deleted (`retainedFileCountLimit: 7`).
 - **No test changes required** for this story. The existing unit tests do not exercise `Program.cs` startup code or file I/O.
+
+## Dev Agent Record
+
+### Implementation Plan
+Added `Serilog.AspNetCore 10.0.0` and `Serilog.Sinks.File 7.0.0` to both service `.csproj` files. Replaced `builder.Logging.AddSimpleConsole(...)` in both `Program.cs` files with a bootstrap logger and `builder.Host.UseSerilog(...)` reading full configuration from `appsettings.json`. Added `Log.CloseAndFlush()` after `app.Run()` in both files. Added `"Serilog"` configuration sections to both `appsettings.json` files with Console + rolling File sinks, relative `logs/` paths (resolves to `/app/logs/` in Docker), 7-day retention, and source-context output templates. The existing `"Logging"` section is preserved as a harmless fallback.
+
+### Completion Notes
+- ✅ Task 1: `Serilog.AspNetCore 10.0.0` and `Serilog.Sinks.File 7.0.0` added to `ServerService.csproj`.
+- ✅ Task 2: Same packages added to `ClientService.csproj`.
+- ✅ Task 3: `ServerService/Program.cs` — bootstrap logger added, `AddSimpleConsole` removed, `UseSerilog` added, `Log.CloseAndFlush()` added.
+- ✅ Task 4: `ClientService/Program.cs` — same changes as Task 3.
+- ✅ Task 5: `"Serilog"` section added to `ServerService/appsettings.json` with Console + File sinks (`logs/serverservice-.log`, rolling daily, 7-day retention).
+- ✅ Task 6: `"Serilog"` section added to `ClientService/appsettings.json` with Console + File sinks (`logs/clientservice-.log`, rolling daily, 7-day retention).
+- ✅ Build: 0 errors, 0 warnings.
+- ✅ Tests: 64 passed. 5 pre-existing MeasurementPush/PullTests failures (NullReferenceException on `Request.Headers`) are unrelated to this story — see Story 5.1 notes.
+- ✅ No test changes required per story Dev Notes.
+- ✅ Code Review (M1): Both Program.cs files wrapped in try/catch/finally — Log.Fatal on unexpected host termination, Log.CloseAndFlush in finally.
+- ✅ Code Review (M2): File List updated with AddSyncRunRowVersion migration files and updated snapshot.
+- ✅ Code Review (L1): Bootstrap logger outputTemplate made consistent with main sink template.
+- ✅ Code Review (L2): appsettings.Development.json updated for both services (Debug level, Console-only sink — file sink suppressed locally).
+
+## File List
+
+- `MicroservicesSync/ServerService/ServerService.csproj` — modified (added Serilog packages)
+- `MicroservicesSync/ClientService/ClientService.csproj` — modified (added Serilog packages)
+- `MicroservicesSync/ServerService/Program.cs` — modified (bootstrap logger with outputTemplate, try/catch/finally guard, UseSerilog, Log.CloseAndFlush)
+- `MicroservicesSync/ClientService/Program.cs` — modified (bootstrap logger with outputTemplate, try/catch/finally guard, UseSerilog, Log.CloseAndFlush)
+- `MicroservicesSync/ServerService/appsettings.json` — modified (added Serilog section)
+- `MicroservicesSync/ClientService/appsettings.json` — modified (added Serilog section)
+- `MicroservicesSync/ServerService/appsettings.Development.json` — modified (added Serilog Development override, Debug level, Console-only sink)
+- `MicroservicesSync/ClientService/appsettings.Development.json` — modified (added Serilog Development override, Debug level, Console-only sink)
+- `MicroservicesSync/Sync.Infrastructure/Data/Migrations/Server/20260317084139_AddSyncRunRowVersion.cs` — added (migration for SyncRun.RowVersion column, created during Story 5.1 fix)
+- `MicroservicesSync/Sync.Infrastructure/Data/Migrations/Server/20260317084139_AddSyncRunRowVersion.Designer.cs` — added (migration designer)
+- `MicroservicesSync/Sync.Infrastructure/Data/Migrations/Server/ServerDbContextModelSnapshot.cs` — modified (updated snapshot to include SyncRun.RowVersion)
+
+## Senior Developer Review (AI)
+
+**Reviewer:** GitHub Copilot on 2026-03-17
+**Verdict:** Changes Requested → Fixed
+
+### Findings
+
+| Severity | Finding | Location | Resolution |
+|----------|---------|----------|------------|
+| MEDIUM | No try/catch/finally Serilog host guard — `Log.CloseAndFlush()` placed after `app.Run()` only runs on graceful shutdown; exceptions during startup would lose buffered file-sink entries | `ServerService/Program.cs`, `ClientService/Program.cs` | Fixed: wrapped entire host setup in try/catch/finally with `Log.Fatal` on catch and `Log.CloseAndFlush` in finally |
+| MEDIUM | Migration files missing from story File List — `AddSyncRunRowVersion.cs`, `AddSyncRunRowVersion.Designer.cs`, and updated `ServerDbContextModelSnapshot.cs` created during dev session not documented | File List | Fixed: all 3 migration files added to File List |
+| LOW | Bootstrap logger `WriteTo.Console()` had no outputTemplate — pre-bootstrap messages used default Serilog format, inconsistent with configured sink template | `ServerService/Program.cs`, `ClientService/Program.cs` | Fixed: added matching outputTemplate to bootstrap `WriteTo.Console()` |
+| LOW | `appsettings.Development.json` had no Serilog section — running locally in Development would write rolling file logs to `bin/Debug/net10.0/logs/`, unexpected for developers | `ServerService/appsettings.Development.json`, `ClientService/appsettings.Development.json` | Fixed: added Serilog override with Debug minimum level and Console-only sink (File sink suppressed in Development) |
+
+**Post-fix:** Build 0 errors, 0 warnings. 64/69 tests pass (5 pre-existing unrelated failures).
+
+## Change Log
+
+- 2026-03-17: Added Serilog file logging to ServerService and ClientService — rolling daily files under `logs/` (resolves to `/app/logs/` in Docker), Console + File sinks, 7-day retention, `AddSimpleConsole` replaced by `UseSerilog` (Story 5.2).
+- 2026-03-17: Code review fixes — try/catch/finally host guard (MEDIUM); bootstrap logger outputTemplate (LOW); appsettings.Development.json Serilog section with Console-only sink (LOW); File List updated with migration files (MEDIUM).

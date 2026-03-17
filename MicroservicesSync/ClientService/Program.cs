@@ -4,18 +4,25 @@ using ClientService.Options;
 using ClientService.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Serilog;
 using Sync.Application.Options;
 using Sync.Domain.Entities;
 using Sync.Infrastructure.Data;
 using System.Net.Http.Json;
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}{NewLine}")
+    .CreateBootstrapLogger();
+
+try
+{
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddSimpleConsole(options =>
-{
-    options.IncludeScopes = true;
-    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
-});
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -136,8 +143,16 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
-app.Run();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "ClientService host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Required for WebApplicationFactory in integration tests
 public partial class Program { }

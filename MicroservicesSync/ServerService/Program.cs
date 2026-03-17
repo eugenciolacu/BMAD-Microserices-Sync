@@ -1,14 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using Sync.Application.Options;
 using Sync.Infrastructure.Data;
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}{NewLine}")
+    .CreateBootstrapLogger();
+
+try
+{
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddSimpleConsole(options =>
-{
-    options.IncludeScopes = true;
-    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
-});
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -66,5 +73,13 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
-app.Run();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "ServerService host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

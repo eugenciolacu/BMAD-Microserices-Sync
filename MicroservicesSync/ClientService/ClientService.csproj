@@ -9,6 +9,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.3" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -19,6 +21,10 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="MicroservicesSync.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="logs\" />
   </ItemGroup>
 
 </Project>
