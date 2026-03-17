@@ -105,7 +105,7 @@ Enable developers and architects to quickly understand how to install, run, and 
 
 ### Epic 5: Polishing
 Addresses targeted defects and incremental improvements discovered after the initial implementation (Epics 1–4). Intended for fixes, workflow corrections, and small enhancements — not originally planned scope.
-**Stories:** 5.1 (Reset to Baseline completeness), 5.2 (Serilog file logging). Additional stories may be added as further improvements are identified.
+**Stories:** 5.1 (Reset to Baseline completeness), 5.2 (Serilog file logging), 5.3 (Idempotent push). Additional stories may be added as further improvements are identified.
 
 ## Epic 1: Environment, Seeding, and Reset Baseline
 
@@ -525,3 +525,23 @@ So that I can inspect persistent log history after a container restart and corre
 **Given** Serilog file logging is configured
 **When** the service is also producing output to stdout
 **Then** `docker-compose logs` still shows full console output — the Serilog Console sink is active alongside the file sink.
+
+### Story 5.3: Idempotent Push
+
+As a developer,
+I want the ServerService push endpoint to gracefully handle re-pushed measurements whose IDs already exist in the database,
+So that a client retry after a partial failure (server committed but client crashed before marking `SyncedAt`) does not cause an HTTP 500 and a broken sync state.
+
+**Acceptance Criteria:**
+
+**Given** a push was already committed on the server but the client crashed before updating `SyncedAt`
+**When** the client retries the push with the same measurement IDs
+**Then** the server returns HTTP 200 and silently skips the already-existing IDs — no primary-key error, no transaction rollback.
+
+**Given** a request contains a mix of new and already-existing measurement IDs
+**When** the push is processed
+**Then** only the new IDs are inserted; the `Pushed` count in the response reflects only newly inserted records, and a warning is logged for each batch that contained duplicates.
+
+**Given** the push controller is instantiated in a unit-test context without an `HttpContext`
+**When** the push action is invoked
+**Then** no `NullReferenceException` is thrown — `Request` access is null-guarded.

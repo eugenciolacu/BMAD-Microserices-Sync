@@ -39,7 +39,7 @@ public class SyncMeasurementsController : ControllerBase
 
         var syncRunId = Guid.NewGuid();
         var userId = request.Measurements.FirstOrDefault()?.UserId;
-        var clientCorrelationId = Request.Headers["X-Correlation-Id"].FirstOrDefault();
+        var clientCorrelationId = Request?.Headers["X-Correlation-Id"].FirstOrDefault();
 
         using (_logger.BeginScope(new Dictionary<string, object?>
         {
@@ -59,26 +59,45 @@ public class SyncMeasurementsController : ControllerBase
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             try
             {
+                var insertedCount = 0;
                 foreach (var batch in batches)
                 {
-                    var entities = batch.Select(dto => new Measurement
-                    {
-                        Id = dto.Id,
-                        Value = dto.Value,
-                        RecordedAt = dto.RecordedAt,
-                        SyncedAt = null,
-                        UserId = dto.UserId,
-                        CellId = dto.CellId
-                    }).ToList();
+                    var batchIds = batch.Select(dto => dto.Id).ToList();
+                    var existingIds = (await _db.Measurements
+                        .Where(m => batchIds.Contains(m.Id))
+                        .Select(m => m.Id)
+                        .ToListAsync(cancellationToken))
+                        .ToHashSet();
 
-                    await _db.Measurements.AddRangeAsync(entities, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
+                    var newEntities = batch
+                        .Where(dto => !existingIds.Contains(dto.Id))
+                        .Select(dto => new Measurement
+                        {
+                            Id = dto.Id,
+                            Value = dto.Value,
+                            RecordedAt = dto.RecordedAt,
+                            SyncedAt = null,
+                            UserId = dto.UserId,
+                            CellId = dto.CellId
+                        }).ToList();
+
+                    if (newEntities.Count > 0)
+                    {
+                        await _db.Measurements.AddRangeAsync(newEntities, cancellationToken);
+                        await _db.SaveChangesAsync(cancellationToken);
+                    }
+
+                    insertedCount += newEntities.Count;
+                    if (existingIds.Count > 0)
+                        _logger.LogWarning(
+                            "SyncMeasurementsController: [{SyncRunId}] skipped {SkippedCount} already-existing measurement(s) in batch (idempotent re-push).",
+                            syncRunId, existingIds.Count);
                 }
 
                 await transaction.CommitAsync(cancellationToken);
                 _logger.LogInformation(
                     "SyncMeasurementsController: [{SyncRunId}] pushed {Count} measurements from user {UserId} in {Batches} batch(es).",
-                    syncRunId, request.Measurements.Count, userId, batches.Count);
+                    syncRunId, insertedCount, userId, batches.Count);
 
                 // Record sync run summary (best-effort; separate from measurement transaction).
                 // Wrapped in its own try/catch: if this insert fails the measurements are already
@@ -91,7 +110,7 @@ public class SyncMeasurementsController : ControllerBase
                         OccurredAt = DateTime.UtcNow,
                         RunType = "push",
                         UserId = request.Measurements.First().UserId,
-                        MeasurementCount = request.Measurements.Count,
+                        MeasurementCount = insertedCount,
                         Status = "success"
                     };
                     _db.SyncRuns.Add(syncRun);
@@ -105,8 +124,8 @@ public class SyncMeasurementsController : ControllerBase
 
                 return Ok(new MeasurementPushResponse
                 {
-                    Pushed = request.Measurements.Count,
-                    Message = $"Pushed {request.Measurements.Count} measurements in {batches.Count} batch(es)."
+                    Pushed = insertedCount,
+                    Message = $"Pushed {insertedCount} new measurements in {batches.Count} batch(es) ({request.Measurements.Count - insertedCount} duplicate(s) skipped)."
                 });
             }
             catch (Exception ex)

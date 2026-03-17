@@ -184,10 +184,10 @@ public class MeasurementPushTests : IDisposable
     }
 
     [Fact]
-    public async Task Push_DuplicatePush_RollsBackAndReturns500()
+    public async Task Push_DuplicatePush_SkipsDuplicatesAndReturns200()
     {
-        // AC#3: when a push fails (here: PK conflict on re-push), the transaction rolls back
-        // and no partial data from the failed push is persisted.
+        // AC#1 + AC#2: re-pushing the same IDs is idempotent — duplicates skipped,
+        // HTTP 200 returned, DB count unchanged, response Pushed = 0.
         await SeedServerReferenceDataAsync();
         var controller = CreateController(batchSize: 3);
         var dtos = BuildDtos(6);
@@ -198,13 +198,45 @@ public class MeasurementPushTests : IDisposable
         Assert.IsType<OkObjectResult>(first);
         Assert.Equal(6, await _serverDb.Measurements.CountAsync());
 
-        // Second push with the same IDs fails (PK/EF tracking conflict) and rolls back
+        // Second push with the same IDs succeeds (duplicates skipped) — no 500
         var second = await controller.Push(request, CancellationToken.None);
-        var statusResult = Assert.IsType<ObjectResult>(second);
-        Assert.Equal(500, statusResult.StatusCode);
+        var okSecond = Assert.IsType<OkObjectResult>(second);
 
-        // AC#3 verified: count is still 6 (the 6 from the first push) — no partial data
+        // AC#2: Pushed count must be 0 — all were duplicates
+        var responseSecond = Assert.IsType<MeasurementPushResponse>(okSecond.Value);
+        Assert.Equal(0, responseSecond.Pushed);
+
+        // AC#1: count is still 6 — no duplicates inserted, no data lost
         Assert.Equal(6, await _serverDb.Measurements.CountAsync());
+    }
+
+    [Fact]
+    public async Task Push_MixedNewAndDuplicate_OnlyNewInserted()
+    {
+        // AC#2: a mix of new and already-existing IDs — only new ones are inserted;
+        // Pushed count reflects only newly inserted records.
+        await SeedServerReferenceDataAsync();
+        var controller = CreateController(batchSize: 10);
+
+        // Push 3 measurements first
+        var firstDtos = BuildDtos(3);
+        var firstRequest = new MeasurementPushRequest { Measurements = firstDtos };
+        var first = await controller.Push(firstRequest, CancellationToken.None);
+        Assert.IsType<OkObjectResult>(first);
+        Assert.Equal(3, await _serverDb.Measurements.CountAsync());
+
+        // Second push: the same 3 (duplicates) + 4 new ones
+        var mixedDtos = firstDtos.Concat(BuildDtos(4)).ToList();
+        var mixedRequest = new MeasurementPushRequest { Measurements = mixedDtos };
+        var second = await controller.Push(mixedRequest, CancellationToken.None);
+        var okSecond = Assert.IsType<OkObjectResult>(second);
+
+        // Only 4 new ones were inserted — DB has 3 + 4 = 7
+        Assert.Equal(7, await _serverDb.Measurements.CountAsync());
+
+        // AC#2: Pushed count = 4 (not 7)
+        var response = Assert.IsType<MeasurementPushResponse>(okSecond.Value);
+        Assert.Equal(4, response.Pushed);
     }
 
     /// <summary>
